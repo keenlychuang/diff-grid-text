@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diffusion Text Animation Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="controls">
+        <div class="control-group">
+            <label for="textInput">Text lines (one per line):</label>
+            <textarea id="textInput" placeholder="K. Simon Chuang&#10;Software Engineer&#10;AI Enthusiast">K. Simon Chuang
+Software Engineer
+AI Enthusiast</textarea>
+        </div>
+        
+        <div class="control-group">
+            <label for="speedSlider">Speed:</label>
+            <input type="range" id="speedSlider" min="1" max="10" value="5">
+        </div>
+        
+        <div class="control-group">
+            <label for="convergenceDelay">Convergence Delay:</label>
+            <input type="range" id="convergenceDelay" min="0" max="500" value="100">
+        </div>
+        
+        <div class="control-group">
+            <label for="holdDuration">Hold Duration (ms):</label>
+            <input type="range" id="holdDuration" min="1000" max="5000" value="2000">
+        </div>
+        
+        <div class="control-group">
+            <label for="diffuseOutSpeed">Diffuse Out Speed:</label>
+            <input type="range" id="diffuseOutSpeed" min="1" max="10" value="7">
+        </div>
+        
+        <div class="control-group">
+            <label for="fontSize">Font Size:</label>
+            <input type="range" id="fontSize" min="16" max="48" value="24">
+        </div>
+        
+        <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+        
+        <button onclick="startAnimation()">▶️ Start</button>
+        <button onclick="stopAnimation()">⏹️ Stop</button>
+        <button onclick="resetAnimation()">🔄 Reset</button>
+    </div>
+
+    <div class="animation-container">
+        <div class="text-display" id="textDisplay"></div>
+    </div>
+
+    <div class="export-section">
+        <button onclick="exportAsGif()">📥 Export as GIF</button>
+        <button onclick="exportAsMP4()">📹 Export as MP4</button>
+        <div id="exportStatus"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
