@@ -5,9 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diffusion Text Animation Generator</title>
     <link rel="stylesheet" href="style.css">
+    <style>body { position: relative; }</style>
 </head>
 <body>
     <div class="controls">
+        <div class="control-group">
+            <label for="animationWidth">Width (px):</label>
+            <input type="number" id="animationWidth" min="200" max="1200" value="800">
+        </div>
+
+        <div class="control-group">
+            <label for="animationHeight">Height (px):</label>
+            <input type="number" id="animationHeight" min="200" max="800" value="400">
+        </div>
         <div class="control-group">
             <label for="textInput">Text lines (one per line):</label>
             <textarea id="textInput" placeholder="K. Simon Chuang&#10;Software Engineer&#10;AI Enthusiast">K. Simon Chuang

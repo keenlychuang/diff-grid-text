@@ -42,6 +42,13 @@ class DiffusionTextAnimator {
             this.targetText = this.textLines[0];
             this.reset();
         });
+        document.getElementById('animationWidth').addEventListener('input', (e) => {
+            this.updateAnimationSize();
+        });
+
+        document.getElementById('animationHeight').addEventListener('input', (e) => {
+            this.updateAnimationSize();
+        });
         
         document.getElementById('speedSlider').addEventListener('input', (e) => {
             this.speed = parseInt(e.target.value);
@@ -63,6 +70,19 @@ class DiffusionTextAnimator {
             this.fontSize = parseInt(e.target.value);
             this.textDisplay.style.fontSize = this.fontSize + 'px';
         });
+    }
+    updateAnimationSize() {
+        const width = document.getElementById('animationWidth').value;
+        const height = document.getElementById('animationHeight').value;
+        const container = document.querySelector('.animation-container');
+        
+        container.style.width = width + 'px';
+        container.style.height = height + 'px';
+        
+        // Update grid background to match
+        if (window.gridBackground) {
+            gridBackground.updateSize(width, height);
+        }
     }
     
     reset() {
@@ -223,6 +243,93 @@ class DiffusionTextAnimator {
         this.textDisplay.textContent = this.currentText;
     }
 }
+
+class GridBackground {
+    constructor() {
+        console.log('GridBackground initializing...');
+        this.canvas = document.createElement('canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.setupCanvas();
+        this.time = 0;
+        this.animate();
+    }
+    
+    setupCanvas() {
+        const container = document.querySelector('.animation-container');
+        const gridContainer = document.createElement('div');
+        gridContainer.className = 'grid-background';
+        gridContainer.appendChild(this.canvas);
+        container.appendChild(gridContainer); // Changed: append to animation container, not body
+        
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+    }
+    
+    draw() {
+        const { width, height } = this.canvas;
+        this.ctx.clearRect(0, 0, width, height);
+        
+        const gridSize = 60;
+        const speed = 1;
+        const horizon = height * 0.7;
+        
+        const isLight = document.body.classList.contains('light');
+        this.ctx.strokeStyle = isLight ? '#00000060' : '#ffffff60'; // Increased from 30 to 60
+
+        
+        const offset = (this.time * speed) % gridSize;
+        
+        // Horizontal lines receding into distance
+        for (let i = 0; i < 15; i++) {
+            const distance = i * gridSize + offset;
+            const perspective = 200 / (200 + distance);
+            const y = horizon + (height - horizon) * perspective; // Fixed: removed (1 - perspective)
+            
+            if (y > height) continue;
+            
+            this.ctx.globalAlpha = perspective * 1.2; // Increased from 0.8
+            this.ctx.lineWidth = Math.max(0.5, perspective * 2); // Added minimum width
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(width, y);
+            this.ctx.stroke();
+        }
+        
+        // Vertical perspective lines 
+        for (let i = 0; i <= 20; i++) {
+            const x = (i / 20) * width;
+            const vanishX = width / 2;
+            
+            this.ctx.globalAlpha = 0.4; // Increased from 0.2
+            this.ctx.lineWidth = 1.5; // Increased from 1
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, height);
+            this.ctx.lineTo(vanishX + (x - vanishX) * 0.1, horizon);
+            this.ctx.stroke();
+        }
+    }
+    
+    animate() {
+        this.time++;
+        this.draw();
+        requestAnimationFrame(() => this.animate());
+    }
+    
+    resize() {
+        const container = document.querySelector('.animation-container');
+        this.canvas.width = container.offsetWidth;
+        this.canvas.height = container.offsetHeight;
+    }
+    updateSize(width, height) {
+        this.canvas.width = parseInt(width);
+        this.canvas.height = parseInt(height);
+    }
+}
+
+// Initialize grid background
+const gridBackground = new GridBackground();
 
 // Initialize animator
 const animator = new DiffusionTextAnimator();
