@@ -271,7 +271,7 @@ class GridBackground {
         
         const gridSize = 60;
         const speed = 1;
-        const horizon = height * 0.7;
+        const horizon = height * 0.05;
         
         const isLight = document.body.classList.contains('light');
         this.ctx.strokeStyle = isLight ? '#00000060' : '#ffffff60'; // Increased from 30 to 60
