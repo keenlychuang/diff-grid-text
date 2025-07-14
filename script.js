@@ -297,7 +297,7 @@ class GridBackground {
         }
         
         // Vertical perspective lines 
-        for (let i = -40; i <= 60; i++) {
+        for (let i = -100; i <= 100; i++) {
             const x = (i / 20) * width;
             const vanishX = width / 2;
             
