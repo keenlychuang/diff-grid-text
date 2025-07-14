@@ -42,6 +42,9 @@ class DiffusionTextAnimator {
             this.targetText = this.textLines[0];
             this.reset();
         });
+        document.getElementById('fontSelect').addEventListener('change', (e) => {
+            this.textDisplay.style.fontFamily = e.target.value;
+        });
         document.getElementById('animationWidth').addEventListener('input', (e) => {
             this.updateAnimationSize();
         });
