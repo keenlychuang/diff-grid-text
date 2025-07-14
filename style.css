@@ -35,6 +35,37 @@ body.light {
     gap: 5px;
 }
 
+.control-section {
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    min-width: 250px;
+}
+
+body.light .control-section {
+    border-color: #ccc;
+}
+
+.control-section h3 {
+    margin-bottom: 10px;
+    font-size: 14px;
+    opacity: 0.9;
+    font-weight: normal;
+}
+
+.control-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.button-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 label {
     font-size: 12px;
     opacity: 0.8;
