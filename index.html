@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diffusion Text Animation Generator</title>
+    <title>Diffusion-Grid Text Animation Generator</title>
     <link rel="stylesheet" href="style.css">
     <style>body { position: relative; }</style>
 </head>
 <body>
-    <div class="app-title">Diffusion-Matrix Style Text Generator</div>
+    <div class="app-title">Diffusion-Grid Text Generator</div>
     <div class="controls">
         <div class="control-section">
             <h3>Animation Settings</h3>
@@ -20,36 +20,6 @@
                 <div class="control-group">
                     <label for="animationHeight">Height (px):</label>
                     <input type="number" id="animationHeight" min="200" max="800" value="400">
-                </div>
-            </div>
-        </div>
-
-        <div class="control-section">
-            <h3>Text & Style</h3>
-            <div class="control-group">
-                <label for="textInput">Text lines (one per line):</label>
-                <textarea id="textInput" placeholder="K. Simon Chuang&#10;Software Engineer&#10;AI Enthusiast">K. Simon Chuang
-                    Software Engineer
-                    AI Enthusiast
-                </textarea>
-            </div>
-            <div class="control-row">
-                <div class="control-group">
-                    <label for="fontSelect">Font:</label>
-                    <select id="fontSelect">
-                        <option value="'Courier New', monospace">Courier New</option>
-                        <option value="'SF Mono', Monaco, monospace">SF Mono</option>
-                        <option value="'Fira Code', monospace">Fira Code</option>
-                        <option value="'JetBrains Mono', monospace">JetBrains</option>
-                        <option value="'Source Code Pro', monospace">Source Code</option>
-                        <option value="'Roboto Mono', monospace">Roboto Mono</option>
-                        <option value="'Ubuntu Mono', monospace">Ubuntu Mono</option>
-                        <option value="Georgia, serif">Georgia</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label for="fontSize">Font Size:</label>
-                    <input type="range" id="fontSize" min="16" max="48" value="24">
                 </div>
             </div>
         </div>
@@ -72,6 +42,35 @@
                 <div class="control-group">
                     <label for="diffuseOutSpeed">Diffuse Out Speed:</label>
                     <input type="range" id="diffuseOutSpeed" min="1" max="10" value="7">
+                </div>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>Text & Style</h3>
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="textInput">Text lines:</label>
+                    <textarea id="textInput">K. Simon Chuang
+Software Engineer
+AI Enthusiast</textarea>
+                </div>
+                <div class="control-group">
+                    <label for="fontSelect">Font:</label>
+                    <select id="fontSelect">
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="'SF Mono', Monaco, monospace">SF Mono</option>
+                        <option value="'Fira Code', monospace">Fira Code</option>
+                        <option value="'JetBrains Mono', monospace">JetBrains</option>
+                        <option value="'Source Code Pro', monospace">Source Code</option>
+                        <option value="'Roboto Mono', monospace">Roboto Mono</option>
+                        <option value="'Ubuntu Mono', monospace">Ubuntu Mono</option>
+                        <option value="Georgia, serif">Georgia</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="fontSize">Size:</label>
+                    <input type="range" id="fontSize" min="16" max="48" value="24">
                 </div>
             </div>
         </div>

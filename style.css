@@ -5,12 +5,23 @@
 }
 .app-title {
     position: fixed;
-    top: 20px;
-    left: 20px;
+    top: 0;
+    left: 0;
+    right: 0; /* Add this */
+    width: 100%; /* Add this */
     font-size: 18px;
-    opacity: 0.7;
-    z-index: 100;
+    opacity: 0.9;
+    z-index: 1000;
     font-weight: normal;
+    background: rgba(10, 10, 10, 0.9); /* Add background */
+    padding: 15px 20px; /* Adjust padding */
+    text-align: center; /* Center the text */
+    border-bottom: 1px solid #333; /* Optional: add border */
+}
+
+body.light .app-title {
+    background: rgba(245, 245, 245, 0.9);
+    border-bottom-color: #ccc;
 }
 
 body {
@@ -21,7 +32,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    padding: 60px 20px 20px 20px; /* Changed from padding: 20px; */
     transition: all 0.3s ease;
 }
 
@@ -35,13 +46,7 @@ body.light {
     display: flex;
     gap: 15px;
     flex-wrap: wrap;
-    align-items: center;
-}
-
-.control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+    align-items: stretch; /* Add this line */
 }
 
 .control-section {
@@ -50,7 +55,16 @@ body.light {
     padding: 15px;
     margin-bottom: 15px;
     min-width: 250px;
+    display: flex; /* Add this line */
+    flex-direction: column; /* Add this line */
 }
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
 
 body.light .control-section {
     border-color: #ccc;
@@ -91,8 +105,8 @@ input, button, select, textarea {
 }
 
 textarea {
-    min-height: 80px;
-    width: 200px;
+    min-height: 60px;  /* reduced from 80px */
+    width: 400px;      /* reduced from 200px */
 }
 
 body.light input,
