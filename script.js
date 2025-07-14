@@ -271,7 +271,7 @@ class GridBackground {
         
         const gridSize = 30;
         const speed = 1;
-        const horizon = height * 0.05;
+        const horizon = height * 0.05 - 100;
         
         const isLight = document.body.classList.contains('light');
         this.ctx.strokeStyle = isLight ? '#00000060' : '#ffffff60'; 
@@ -306,7 +306,7 @@ class GridBackground {
             
             this.ctx.beginPath();
             this.ctx.moveTo(x, height);
-            this.ctx.lineTo(vanishX + (x - vanishX) * 0.1, horizon);
+            this.ctx.lineTo(vanishX, horizon);
             this.ctx.stroke();
         }
     }
