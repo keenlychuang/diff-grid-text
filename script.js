@@ -128,6 +128,7 @@ class DiffusionTextAnimator {
             const timer = setTimeout(() => {
                 if (this.animationState === 'converging' && this.isAnimating) {
                     this.convergedChars.add(index);
+                    this.showConvergenceEffect(index);
                     
                     // Check if all non-space characters have converged
                     const nonSpaceChars = this.targetText.replace(/ /g, '').length;
@@ -139,6 +140,23 @@ class DiffusionTextAnimator {
             
             this.charTimers.set(index, timer);
         });
+    }
+    showConvergenceEffect(convergedIndex) {
+        let html = '';
+        this.currentText.split('').forEach((char, index) => {
+            if (index === convergedIndex) {
+                html += `<span class="converged-char-highlight">${this.targetText[index]}</span>`;
+            } else {
+                html += char;
+            }
+        });
+        this.textDisplay.innerHTML = html;
+        
+        setTimeout(() => {
+            if (this.isAnimating) {
+                this.render();
+            }
+        }, 2200);
     }
     
     startHoldPhase() {

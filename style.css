@@ -89,6 +89,27 @@ body.light .control-section {
     flex-wrap: wrap;
 }
 
+.converged-char-highlight {
+    background: #4a90e2;
+    color: #fff;
+    animation: charHighlight 2s ease-out; /* Much longer */
+}
+
+@keyframes charHighlight {
+    0% { 
+        background: #4a90e2;
+        transform: scale(1.05);
+    }
+    80% { 
+        background: #4a90e2; /* Stay highlighted for most of the time */
+        transform: scale(1);
+    }
+    100% { 
+        background: transparent;
+        transform: scale(1);
+    }
+}
+
 label {
     font-size: 12px;
     opacity: 0.8;
