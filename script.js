@@ -269,18 +269,18 @@ class GridBackground {
         const { width, height } = this.canvas;
         this.ctx.clearRect(0, 0, width, height);
         
-        const gridSize = 60;
+        const gridSize = 30;
         const speed = 1;
         const horizon = height * 0.05;
         
         const isLight = document.body.classList.contains('light');
-        this.ctx.strokeStyle = isLight ? '#00000060' : '#ffffff60'; // Increased from 30 to 60
+        this.ctx.strokeStyle = isLight ? '#00000060' : '#ffffff60'; 
 
         
         const offset = (this.time * speed) % gridSize;
         
         // Horizontal lines receding into distance
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 50; i++) {
             const distance = i * gridSize + offset;
             const perspective = 200 / (200 + distance);
             const y = horizon + (height - horizon) * perspective; // Fixed: removed (1 - perspective)
@@ -297,7 +297,7 @@ class GridBackground {
         }
         
         // Vertical perspective lines 
-        for (let i = 0; i <= 20; i++) {
+        for (let i = -40; i <= 60; i++) {
             const x = (i / 20) * width;
             const vanishX = width / 2;
             
