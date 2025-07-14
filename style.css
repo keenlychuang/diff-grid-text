@@ -90,9 +90,9 @@ body.light .control-section {
 }
 
 .converged-char-highlight {
-    background: #4a90e2;
+    background: var(--convergence-color, #4a90e2);
     color: #fff;
-    animation: charHighlight 2s ease-out; /* Much longer */
+    animation: charHighlight 2s ease-out;
 }
 
 @keyframes charHighlight {

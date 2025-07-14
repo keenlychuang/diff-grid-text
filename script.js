@@ -1,5 +1,6 @@
 class DiffusionTextAnimator {
     constructor() {
+        this.convergenceEffectType = 'highlight';
         this.textLines = ["K. Simon Chuang", "Software Engineer", "AI Enthusiast"];
         this.currentLineIndex = 0;
         this.targetText = this.textLines[0];
@@ -41,6 +42,13 @@ class DiffusionTextAnimator {
             this.currentLineIndex = 0;
             this.targetText = this.textLines[0];
             this.reset();
+        });
+
+        document.getElementById('convergenceEffect').addEventListener('change', (e) => {
+            this.convergenceEffectType = e.target.value;
+        });
+        document.getElementById('convergenceColor').addEventListener('input', (e) => {
+            document.documentElement.style.setProperty('--convergence-color', e.target.value);
         });
         document.getElementById('fontSelect').addEventListener('change', (e) => {
             this.textDisplay.style.fontFamily = e.target.value;
@@ -142,6 +150,10 @@ class DiffusionTextAnimator {
         });
     }
     showConvergenceEffect(convergedIndex) {
+        if (this.convergenceEffectType === 'none') {
+            return; // Skip effect
+        }
+        
         let html = '';
         this.currentText.split('').forEach((char, index) => {
             if (index === convergedIndex) {
