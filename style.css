@@ -110,6 +110,26 @@ body.light .control-section {
     }
 }
 
+.converged-char-underline {
+    border-bottom: 2px solid var(--convergence-color, #4a90e2);
+    animation: charUnderline 2s ease-out;
+}
+
+@keyframes charUnderline {
+    0% { 
+        border-bottom-width: 3px;
+        transform: scale(1.05);
+    }
+    80% { 
+        border-bottom-width: 2px;
+        transform: scale(1);
+    }
+    100% { 
+        border-bottom-width: 0px;
+        transform: scale(1);
+    }
+}
+
 label {
     font-size: 12px;
     opacity: 0.8;

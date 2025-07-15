@@ -153,18 +153,20 @@ class DiffusionTextAnimator {
     }
     showConvergenceEffect(convergedIndex) {
         if (this.convergenceEffectType === 'none') {
-            return; // Skip effect
+            return;
         }
 
-            // Store the highlighted character temporarily
         this.highlightedChar = convergedIndex;
         this.highlightEndTime = Date.now() + 200; 
         this.renderWithHighlight();
         
         let html = '';
+        const cssClass = this.convergenceEffectType === 'underline' ? 
+            'converged-char-underline' : 'converged-char-highlight';
+        
         this.currentText.split('').forEach((char, index) => {
             if (index === convergedIndex) {
-                html += `<span class="converged-char-highlight">${this.targetText[index]}</span>`;
+                html += `<span class="${cssClass}">${this.targetText[index]}</span>`;
             } else {
                 html += char;
             }
@@ -264,10 +266,13 @@ class DiffusionTextAnimator {
             return;
         }
         
+        const cssClass = this.convergenceEffectType === 'underline' ? 
+            'converged-char-underline' : 'converged-char-highlight';
+        
         let html = '';
         this.currentText.split('').forEach((char, index) => {
             if (index === this.highlightedChar) {
-                html += `<span class="converged-char-highlight">${this.targetText[index]}</span>`;
+                html += `<span class="${cssClass}">${this.targetText[index]}</span>`;
             } else {
                 html += char;
             }
