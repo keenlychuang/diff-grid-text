@@ -108,9 +108,15 @@
     </div>
 
     <div class="export-section">
-        <button onclick="exportAsGif()">📥 Export as GIF</button>
-        <button onclick="exportAsMP4()">📹 Export as MP4</button>
-        <div id="exportStatus"></div>
+        <button onclick="exportAsWebM()">📥 Export as WebM</button>
+        <div id="exportStatus">
+            <div class="progress-indicator" id="progressIndicator" style="display: none;">
+                🎬 Recording: <span id="currentLine"></span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>

@@ -201,6 +201,32 @@ body.light .animation-container {
     font-family: 'Courier New', monospace;
 }
 
+.progress-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.progress-bar {
+    width: 200px;
+    height: 4px;
+    background: #333;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+body.light .progress-bar {
+    background: #ccc;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #4a90e2;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
 .export-section {
     margin-top: 30px;
     display: flex;

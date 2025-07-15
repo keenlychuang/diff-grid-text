@@ -481,24 +481,27 @@ function drawGridBackground(ctx, width, height, time) {
     ctx.globalAlpha = 1;
 }
 
-let frameCounter = 0; // Add this at the top of exportAsGif
-function exportAsGif() {
+let frameCounter = 0; 
+function exportAsWebM() {
     if (mediaRecorder && mediaRecorder.state === 'recording') return;
     
-    document.getElementById('exportStatus').innerHTML = 
-        '<div class="status">🎬 Starting recording...</div>';
+    // Show progress indicator immediately
+    const progressIndicator = document.getElementById('progressIndicator');
+    progressIndicator.style.display = 'inline-flex';
+    document.getElementById('currentLine').textContent = `Line 1 of ${animator.textLines.length}`;
+    document.getElementById('progressFill').style.width = '0%';
     
+    // Set up canvas and recording
     const canvas = document.createElement('canvas');
     const container = document.querySelector('.animation-container');
-    canvas.width = container.offsetWidth * 2;  // 2x resolution
+    canvas.width = container.offsetWidth * 2;
     canvas.height = container.offsetHeight * 2;
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     
-    const stream = canvas.captureStream(60);
+    const stream = canvas.captureStream(30);
     
-    // Try different codecs until one works
     let mimeType = 'video/webm';
     if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
         mimeType = 'video/webm;codecs=vp8';
@@ -506,18 +509,39 @@ function exportAsGif() {
         mimeType = 'video/mp4';
     }
     
-    console.log('Using mime type:', mimeType);
     mediaRecorder = new MediaRecorder(stream, { 
         mimeType,
-        videoBitsPerSecond: 10000000 // Higher bitrate for quality
+        videoBitsPerSecond: 10000000
     });
     recordedChunks = [];
     
+    // Track progress
+    let startLine = animator.currentLineIndex;
+    let totalLines = animator.textLines.length;
+    let progressInterval;
+    
+    const updateProgress = () => {
+        let currentLine = animator.currentLineIndex;
+        let linesCompleted = (currentLine - startLine + totalLines) % totalLines;
+        let progress = Math.min((linesCompleted / totalLines) * 100, 100);
+        
+        document.getElementById('currentLine').textContent = 
+            `Line ${currentLine + 1} of ${totalLines}`;
+        document.getElementById('progressFill').style.width = `${progress}%`;
+    };
+    
+    // Start progress updates
+    progressInterval = setInterval(updateProgress, 100);
+    
+    // Set up recording event handlers
     mediaRecorder.ondataavailable = e => {
         if (e.data.size > 0) recordedChunks.push(e.data);
     };
     
     mediaRecorder.onstop = () => {
+        // Clear interval if still running
+        if (progressInterval) clearInterval(progressInterval);
+        
         const blob = new Blob(recordedChunks, { type: mimeType });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -528,66 +552,52 @@ function exportAsGif() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
+        // Hide progress and show success
+        progressIndicator.style.display = 'none';
         document.getElementById('exportStatus').innerHTML = 
-            '<div class="status success">✅ Video downloaded! Convert to GIF online</div>';
+            '<div class="status success">✅ Video downloaded!</div>';
     };
-
-    function drawToCanvas() {
-        if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
-        
-        // Clear canvas (use actual canvas size)
-        ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Draw grid with 2x dimensions
-        drawGridBackground(ctx, canvas.width, canvas.height, frameCounter++);
-        
-        // Draw text with 2x positioning and font
-        ctx.fillStyle = getComputedStyle(document.body).color;
-        ctx.font = `${animator.fontSize * 2}px monospace`; // 2x font
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(animator.currentText, canvas.width/2, canvas.height/2); // Uses canvas 
-        
-        requestAnimationFrame(drawToCanvas);
-    }
     
+    // Set up cycle completion callback
     animator.onCycleComplete = () => {
+        // Stop progress updates first
+        clearInterval(progressInterval);
+        
+        // Show completion
+        document.getElementById('currentLine').textContent = 'Complete!';
+        document.getElementById('progressFill').style.width = '100%';
+        
         setTimeout(() => {
             mediaRecorder.stop();
-            stopAnimation();
+            animator.stopAnimation();
         }, 500);
     };
-    frameCounter = 0; // Reset counter
-    // Use setInterval instead of requestAnimationFrame for consistent timing
-    const drawInterval = setInterval(() => {
-        if (!mediaRecorder || mediaRecorder.state !== 'recording') {
-            clearInterval(drawInterval);
-            return;
-        }
+    
+    // Start recording and animation
+    mediaRecorder.start();
+    updateProgress();
+    
+    // Draw to canvas loop
+    frameCounter = 0;
+    function drawLoop() {
+        if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
         
-        // Clear canvas
         ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Draw grid
         drawGridBackground(ctx, canvas.width, canvas.height, frameCounter++);
         
-        // Draw text
         ctx.fillStyle = getComputedStyle(document.body).color;
-        ctx.font = `${animator.fontSize}px monospace`;
+        ctx.font = `${animator.fontSize * 2}px monospace`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(animator.currentText, canvas.width/2, canvas.height/2);
-    }, 1000/30); // 30fps = ~33ms per frame
-    mediaRecorder.start();
-    drawToCanvas();
-    startAnimation();
-}
-
-function exportAsMP4() {
-    const status = document.getElementById('exportStatus');
-    status.innerHTML = '<div class="status success">MP4 export feature coming soon! For now, use screen recording software.</div>';
+        
+        requestAnimationFrame(drawLoop);
+    }
+    
+    drawLoop();
+    animator.startAnimation();
 }
 
 // Auto-start animation on load
