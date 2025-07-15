@@ -49,6 +49,25 @@ class DiffusionTextAnimator {
             this.reset();
         });
 
+        // Grid background controls
+        document.getElementById('gridSpeed').addEventListener('input', (e) => {
+            if (window.gridBackground) {
+                gridBackground.speed = parseFloat(e.target.value);
+            }
+        });
+
+        document.getElementById('gridDensity').addEventListener('input', (e) => {
+            if (window.gridBackground) {
+                gridBackground.gridSize = parseInt(e.target.value);
+            }
+        });
+
+        document.getElementById('gridColor').addEventListener('input', (e) => {
+            if (window.gridBackground) {
+                gridBackground.gridColor = e.target.value;
+            }
+        });
+
         document.getElementById('convergenceEffect').addEventListener('change', (e) => {
             this.convergenceEffectType = e.target.value;
         });
@@ -332,6 +351,9 @@ class GridBackground {
     constructor() {
         console.log('GridBackground initializing...');
         this.canvas = document.createElement('canvas');
+        this.speed = 1;           // Make dynamic
+        this.gridSize = 30;       // Make dynamic  
+        this.gridColor = '#ffffff'; // Make dynamic
         this.ctx = this.canvas.getContext('2d');
         this.setupCanvas();
         this.time = 0;
@@ -353,26 +375,24 @@ class GridBackground {
         const { width, height } = this.canvas;
         this.ctx.clearRect(0, 0, width, height);
         
-        const gridSize = 30;
-        const speed = 1;
         const horizon = height * 0.05 - 100;
         
+        // Fix color logic
         const isLight = document.body.classList.contains('light');
-        this.ctx.strokeStyle = isLight ? '#00000060' : '#ffffff60'; 
-
+        this.ctx.strokeStyle = this.gridColor ? this.gridColor + '60' : (isLight ? '#00000060' : '#ffffff60');
         
-        const offset = (this.time * speed) % gridSize;
+        const offset = (this.time * this.speed) % this.gridSize;
         
-        // Horizontal lines receding into distance
+        // Horizontal lines - use this.gridSize, not hardcoded
         for (let i = 0; i < 50; i++) {
-            const distance = i * gridSize + offset;
+            const distance = i * this.gridSize + offset; // Changed
             const perspective = 200 / (200 + distance);
-            const y = horizon + (height - horizon) * perspective; // Fixed: removed (1 - perspective)
+            const y = horizon + (height - horizon) * perspective;
             
             if (y > height) continue;
             
-            this.ctx.globalAlpha = perspective * 1.2; // Increased from 0.8
-            this.ctx.lineWidth = Math.max(0.5, perspective * 2); // Added minimum width
+            this.ctx.globalAlpha = perspective * 1.2;
+            this.ctx.lineWidth = Math.max(0.5, perspective * 2);
             
             this.ctx.beginPath();
             this.ctx.moveTo(0, y);
