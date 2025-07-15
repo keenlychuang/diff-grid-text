@@ -1,3 +1,4 @@
+
 class DiffusionTextAnimator {
     constructor() {
         this.convergenceEffectType = 'highlight';
@@ -14,6 +15,8 @@ class DiffusionTextAnimator {
         this.diffuseOutSpeed = 7;
         this.highlightedChar = undefined;
         this.highlightEndTime = 0;
+        this.onCycleComplete = null; // Callback for when full cycle completes
+        this.recordingStartLine = null;
         
         // Animation state
         this.animationState = 'converging'; // 'converging', 'holding', 'diffusing'
@@ -89,6 +92,7 @@ class DiffusionTextAnimator {
         const height = document.getElementById('animationHeight').value;
         const container = document.querySelector('.animation-container');
         
+        
         container.style.width = width + 'px';
         container.style.height = height + 'px';
         
@@ -118,6 +122,7 @@ class DiffusionTextAnimator {
         
         this.isAnimating = true;
         this.animationState = 'converging';
+        this.recordingStartLine = this.currentLineIndex; // Track starting point
         this.animate();
         this.scheduleConvergence();
     }
@@ -235,6 +240,16 @@ class DiffusionTextAnimator {
         
         // Start convergence for new line immediately
         this.scheduleConvergence();
+
+        // Check if we've completed a full cycle
+         if (this.recordingStartLine !== null && 
+        this.currentLineIndex === this.recordingStartLine) {
+        // We're back to the starting line - cycle complete!
+        if (this.onCycleComplete) {
+            setTimeout(() => this.onCycleComplete(), 500); // Small delay after diffusion
+        }
+        this.recordingStartLine = null;
+    }
     }
     
     stopAnimation() {
@@ -420,10 +435,154 @@ function toggleTheme() {
     document.body.classList.toggle('light');
 }
 
-// Export functions (placeholder implementations)
+let mediaRecorder = null;
+let recordedChunks = [];
+
+function drawGridBackground(ctx, width, height, time) {
+    const gridSize = 30;
+    const speed = 1;
+    const horizon = height * 0.05 - 100;
+    
+    const isLight = document.body.classList.contains('light');
+    ctx.strokeStyle = isLight ? '#00000060' : '#ffffff60';
+    
+    const offset = (time * speed) % gridSize; // Now uses frame counter
+    
+    // Rest stays the same...
+    for (let i = 0; i < 50; i++) {
+        const distance = i * gridSize + offset;
+        const perspective = 200 / (200 + distance);
+        const y = horizon + (height - horizon) * perspective;
+        
+        if (y > height) continue;
+        
+        ctx.globalAlpha = perspective * 1.2;
+        ctx.lineWidth = Math.max(0.5, perspective * 2);
+        
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+    }
+    
+    for (let i = -100; i <= 100; i++) {
+        const x = (i / 20) * width;
+        const vanishX = width / 2;
+        
+        ctx.globalAlpha = 0.4;
+        ctx.lineWidth = 1.5;
+        
+        ctx.beginPath();
+        ctx.moveTo(x, height);
+        ctx.lineTo(vanishX, horizon);
+        ctx.stroke();
+    }
+    
+    ctx.globalAlpha = 1;
+}
+
+let frameCounter = 0; // Add this at the top of exportAsGif
 function exportAsGif() {
-    const status = document.getElementById('exportStatus');
-    status.innerHTML = '<div class="status success">GIF export feature coming soon! For now, use screen recording software.</div>';
+    if (mediaRecorder && mediaRecorder.state === 'recording') return;
+    
+    document.getElementById('exportStatus').innerHTML = 
+        '<div class="status">🎬 Starting recording...</div>';
+    
+    const canvas = document.createElement('canvas');
+    const container = document.querySelector('.animation-container');
+    canvas.width = container.offsetWidth * 2;  // 2x resolution
+    canvas.height = container.offsetHeight * 2;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    const stream = canvas.captureStream(60);
+    
+    // Try different codecs until one works
+    let mimeType = 'video/webm';
+    if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
+        mimeType = 'video/webm;codecs=vp8';
+    } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+        mimeType = 'video/mp4';
+    }
+    
+    console.log('Using mime type:', mimeType);
+    mediaRecorder = new MediaRecorder(stream, { 
+        mimeType,
+        videoBitsPerSecond: 10000000 // Higher bitrate for quality
+    });
+    recordedChunks = [];
+    
+    mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+    
+    mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `intro-animation.${mimeType.includes('mp4') ? 'mp4' : 'webm'}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        document.getElementById('exportStatus').innerHTML = 
+            '<div class="status success">✅ Video downloaded! Convert to GIF online</div>';
+    };
+
+    function drawToCanvas() {
+        if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+        
+        // Clear canvas (use actual canvas size)
+        ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw grid with 2x dimensions
+        drawGridBackground(ctx, canvas.width, canvas.height, frameCounter++);
+        
+        // Draw text with 2x positioning and font
+        ctx.fillStyle = getComputedStyle(document.body).color;
+        ctx.font = `${animator.fontSize * 2}px monospace`; // 2x font
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(animator.currentText, canvas.width/2, canvas.height/2); // Uses canvas 
+        
+        requestAnimationFrame(drawToCanvas);
+    }
+    
+    animator.onCycleComplete = () => {
+        setTimeout(() => {
+            mediaRecorder.stop();
+            stopAnimation();
+        }, 500);
+    };
+    frameCounter = 0; // Reset counter
+    // Use setInterval instead of requestAnimationFrame for consistent timing
+    const drawInterval = setInterval(() => {
+        if (!mediaRecorder || mediaRecorder.state !== 'recording') {
+            clearInterval(drawInterval);
+            return;
+        }
+        
+        // Clear canvas
+        ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw grid
+        drawGridBackground(ctx, canvas.width, canvas.height, frameCounter++);
+        
+        // Draw text
+        ctx.fillStyle = getComputedStyle(document.body).color;
+        ctx.font = `${animator.fontSize}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(animator.currentText, canvas.width/2, canvas.height/2);
+    }, 1000/30); // 30fps = ~33ms per frame
+    mediaRecorder.start();
+    drawToCanvas();
+    startAnimation();
 }
 
 function exportAsMP4() {
