@@ -10,8 +10,10 @@ class DiffusionTextAnimator {
         this.speed = 5;
         this.convergenceDelay = 100;
         this.fontSize = 24;
-        this.holdDuration = 2000;
+        this.holdDuration = 1000;
         this.diffuseOutSpeed = 7;
+        this.highlightedChar = undefined;
+        this.highlightEndTime = 0;
         
         // Animation state
         this.animationState = 'converging'; // 'converging', 'holding', 'diffusing'
@@ -153,6 +155,11 @@ class DiffusionTextAnimator {
         if (this.convergenceEffectType === 'none') {
             return; // Skip effect
         }
+
+            // Store the highlighted character temporarily
+        this.highlightedChar = convergedIndex;
+        this.highlightEndTime = Date.now() + 200; 
+        this.renderWithHighlight();
         
         let html = '';
         this.currentText.split('').forEach((char, index) => {
@@ -240,6 +247,33 @@ class DiffusionTextAnimator {
         this.charTimers.forEach(timer => clearTimeout(timer));
         this.charTimers.clear();
     }
+
+    render() {
+        // Check if we should show highlight
+        if (this.highlightedChar !== undefined && Date.now() < this.highlightEndTime) {
+            this.renderWithHighlight();
+        } else {
+            this.highlightedChar = undefined;
+            this.textDisplay.textContent = this.currentText;
+        }
+    }
+
+    renderWithHighlight() {
+        if (this.highlightedChar === undefined) {
+            this.textDisplay.textContent = this.currentText;
+            return;
+        }
+        
+        let html = '';
+        this.currentText.split('').forEach((char, index) => {
+            if (index === this.highlightedChar) {
+                html += `<span class="converged-char-highlight">${this.targetText[index]}</span>`;
+            } else {
+                html += char;
+            }
+        });
+        this.textDisplay.innerHTML = html;
+    }
     
     animate() {
         if (!this.isAnimating) return;
@@ -262,7 +296,6 @@ class DiffusionTextAnimator {
                 return this.getRandomChar();
             }).join('');
         }
-        
         this.render();
         
         // Control animation speed (faster during diffusing)
@@ -272,9 +305,7 @@ class DiffusionTextAnimator {
         }, 200 - (currentSpeed * 15));
     }
     
-    render() {
-        this.textDisplay.textContent = this.currentText;
-    }
+
 }
 
 class GridBackground {

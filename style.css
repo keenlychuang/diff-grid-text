@@ -97,11 +97,11 @@ body.light .control-section {
 
 @keyframes charHighlight {
     0% { 
-        background: #4a90e2;
+        background: var(--convergence-color, #4a90e2);
         transform: scale(1.05);
     }
     80% { 
-        background: #4a90e2; /* Stay highlighted for most of the time */
+        background: var(--convergence-color, #4a90e2);
         transform: scale(1);
     }
     100% { 
