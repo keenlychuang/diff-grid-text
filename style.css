@@ -46,7 +46,9 @@ body.light {
     display: flex;
     gap: 15px;
     flex-wrap: wrap;
-    align-items: stretch; /* Add this line */
+    align-items: stretch;
+    width: fit-content; /* Add this to shrink container to content */
+    max-width: 100%;
 }
 
 .control-section {
@@ -57,6 +59,11 @@ body.light {
     min-width: 250px;
     display: flex; /* Add this line */
     flex-direction: column; /* Add this line */
+}
+
+.control-section:nth-child(3),
+.control-section:last-child {
+    flex: 1;
 }
 
 .control-group {
