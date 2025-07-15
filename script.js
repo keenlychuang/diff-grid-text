@@ -49,23 +49,16 @@ class DiffusionTextAnimator {
             this.reset();
         });
 
-        // Grid background controls
         document.getElementById('gridSpeed').addEventListener('input', (e) => {
-            if (window.gridBackground) {
-                gridBackground.speed = parseFloat(e.target.value);
-            }
+            gridBackground.speed = parseFloat(e.target.value);
         });
 
         document.getElementById('gridDensity').addEventListener('input', (e) => {
-            if (window.gridBackground) {
-                gridBackground.gridSize = parseInt(e.target.value);
-            }
+            gridBackground.gridSize = 60 - parseInt(e.target.value); // Invert: 50→10, 10→50
         });
 
         document.getElementById('gridColor').addEventListener('input', (e) => {
-            if (window.gridBackground) {
-                gridBackground.gridColor = e.target.value;
-            }
+            gridBackground.gridColor = e.target.value;
         });
 
         document.getElementById('convergenceEffect').addEventListener('change', (e) => {
@@ -379,7 +372,7 @@ class GridBackground {
         
         // Fix color logic
         const isLight = document.body.classList.contains('light');
-        this.ctx.strokeStyle = this.gridColor ? this.gridColor + '60' : (isLight ? '#00000060' : '#ffffff60');
+        this.ctx.strokeStyle = this.gridColor + '60';
         
         const offset = (this.time * this.speed) % this.gridSize;
         
@@ -401,8 +394,10 @@ class GridBackground {
         }
         
         // Vertical perspective lines 
+        // Dynamic spacing based on gridSize
+        const verticalSpacing = 30 / this.gridSize * 20;
         for (let i = -100; i <= 100; i++) {
-            const x = (i / 20) * width;
+            const x = (i / verticalSpacing) * width;
             const vanishX = width / 2;
             
             this.ctx.globalAlpha = 0.4; // Increased from 0.2
@@ -434,6 +429,9 @@ class GridBackground {
 
 // Initialize grid background
 const gridBackground = new GridBackground();
+gridBackground.speed = parseFloat(document.getElementById('gridSpeed').value);
+gridBackground.gridSize = 60 - parseInt(document.getElementById('gridDensity').value);
+gridBackground.gridColor = document.getElementById('gridColor').value;
 
 // Initialize animator
 const animator = new DiffusionTextAnimator();
@@ -459,8 +457,8 @@ let mediaRecorder = null;
 let recordedChunks = [];
 
 function drawGridBackground(ctx, width, height, time) {
-    const gridSize = 30;
-    const speed = 1;
+    const gridSize = gridBackground.gridSize;
+    const speed = gridBackground.speed;
     const horizon = height * 0.05 - 100;
     
     const isLight = document.body.classList.contains('light');
