@@ -51,16 +51,6 @@ body.light {
     max-width: 100%;
 }
 
-.control-section {
-    border: 1px solid #333;
-    border-radius: 6px;
-    padding: 15px;
-    margin-bottom: 15px;
-    min-width: 250px;
-    display: flex; /* Add this line */
-    flex-direction: column; /* Add this line */
-}
-
 .control-section:nth-child(3),
 .control-section:last-child {
     flex: 1;
@@ -77,11 +67,14 @@ body.light .control-section {
     border-color: #ccc;
 }
 
-.control-section h3 {
-    margin-bottom: 10px;
-    font-size: 14px;
-    opacity: 0.9;
-    font-weight: normal;
+.control-section {
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 15px;
+    /* Remove: margin-bottom: 15px; */
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
 }
 
 .control-row {
@@ -94,6 +87,12 @@ body.light .control-section {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+.button-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
 }
 
 .converged-char-highlight {
@@ -153,8 +152,8 @@ input, button, select, textarea {
 }
 
 textarea {
-    min-height: 60px;  /* reduced from 80px */
-    width: 400px;      /* reduced from 200px */
+    min-height: 60px;
+    width: 200px;      /* reduced from 400px */
 }
 
 body.light input,
