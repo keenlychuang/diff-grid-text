@@ -350,6 +350,7 @@ class GridBackground {
         this.ctx = this.canvas.getContext('2d');
         this.setupCanvas();
         this.time = 0;
+        this.isAnimating = true;
         this.animate();
     }
     
@@ -411,9 +412,17 @@ class GridBackground {
     }
     
     animate() {
+        if (!this.isAnimating) return; 
         this.time++;
         this.draw();
         requestAnimationFrame(() => this.animate());
+    }
+    stop() { 
+        this.isAnimating = false;
+    }
+    start() { 
+        this.isAnimating = true;
+        this.animate();
     }
     
     resize() {
@@ -437,12 +446,14 @@ gridBackground.gridColor = document.getElementById('gridColor').value;
 const animator = new DiffusionTextAnimator();
 
 // Control functions
-function startAnimation() {
-    animator.startAnimation();
-}
-
 function stopAnimation() {
     animator.stopAnimation();
+    gridBackground.stop(); 
+}
+
+function startAnimation() {
+    animator.startAnimation();
+    gridBackground.start(); 
 }
 
 function resetAnimation() {
