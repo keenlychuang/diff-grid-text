@@ -50,6 +50,13 @@ class DiffusionTextAnimator {
             this.targetText = this.textLines[0];
             this.reset();
         });
+        document.getElementById('waveAmplitude').addEventListener('input', (e) => {
+            gridBackground.waveAmplitude = parseFloat(e.target.value);
+        });
+
+        document.getElementById('waveFrequency').addEventListener('input', (e) => {
+            gridBackground.waveFrequency = parseFloat(e.target.value);
+        });
         document.getElementById('gridThickness').addEventListener('input', (e) => {
             gridBackground.lineThickness = parseFloat(e.target.value);
         });
@@ -463,6 +470,8 @@ class GridBackground {
         this.ctx = this.canvas.getContext('2d');
         this.setupCanvas();
         this.time = 0;
+        this.waveAmplitude = 20;
+        this.waveFrequency = 0.01;
         this.isAnimating = true;
         this.animate();
     }
@@ -490,40 +499,77 @@ class GridBackground {
         
         const offset = (this.time * this.speed) % this.gridSize;
         
-        // Horizontal lines - use this.gridSize, not hardcoded
         for (let i = 0; i < 50; i++) {
-            const distance = i * this.gridSize + offset; // Changed
+            const distance = i * this.gridSize + offset;
             const perspective = 200 / (200 + distance);
-            const y = horizon + (height - horizon) * perspective;
+            const baseY = horizon + (height - horizon) * perspective;
             
-            if (y > height) continue;
+            if (baseY > height) continue;
             
             this.ctx.globalAlpha = perspective * 1.2;
             this.ctx.lineWidth = Math.max(0.5, perspective * 2 * this.lineThickness);
-
             
             this.ctx.beginPath();
-            this.ctx.moveTo(0, y);
-            this.ctx.lineTo(width, y);
+            // Create wave by varying Y position across the width
+            for (let x = 0; x <= width; x += 5) {
+                // Remove the perspective multiplier from wave amplitude
+                const waveOffset = Math.sin((x * this.waveFrequency) + (this.time * 0.05)) * this.waveAmplitude;
+                const y = baseY + waveOffset;
+                
+                if (x === 0) {
+                    this.ctx.moveTo(x, y);
+                } else {
+                    this.ctx.lineTo(x, y);
+                }
+            }
             this.ctx.stroke();
         }
         
-        // Vertical perspective lines 
-        // Dynamic spacing based on gridSize
-        const verticalSpacing = 30 / this.gridSize * 20;
-        for (let i = -100; i <= 100; i++) {
-            const x = (i / verticalSpacing) * width;
-            const vanishX = width / 2;
-            
-            this.ctx.globalAlpha = 0.4; // Increased from 0.2
-            this.ctx.lineWidth = 1.5 * this.lineThickness;
-
-            
-            this.ctx.beginPath();
-            this.ctx.moveTo(x, height);
-            this.ctx.lineTo(vanishX, horizon);
-            this.ctx.stroke();
+// Vertical perspective lines that follow the wave contours
+const verticalSpacing = 30 / this.gridSize * 20;
+for (let i = -100; i <= 100; i++) {
+    const xAtBottom = (i / verticalSpacing) * width;
+    const vanishX = width / 2;
+    
+    this.ctx.globalAlpha = 0.4;
+    this.ctx.lineWidth = 1.5 * this.lineThickness;
+    
+    this.ctx.beginPath();
+    
+    let hasStarted = false;
+    
+    // Draw vertical lines by sampling wave at fixed X positions
+    for (let step = 0; step <= 100; step++) { // Increased steps for better coverage
+        const distance = step * this.gridSize * 0.5; // Smaller step size
+        const perspective = 200 / (200 + distance);
+        
+        if (perspective <= 0.01) break; // Stop when too small
+        
+        // Keep X position constant for this vertical line
+        const x = xAtBottom + (vanishX - xAtBottom) * (1 - perspective);
+        
+        // Sample the wave at this X position
+        const baseY = horizon + (height - horizon) * perspective;
+        const waveOffset = Math.sin((x * this.waveFrequency) + (this.time * 0.05)) * this.waveAmplitude;
+        const y = baseY + waveOffset;
+        
+        if (y > height) {
+            if (hasStarted) break; // Only break if we've started drawing
+            continue;
         }
+        
+        if (!hasStarted) {
+            this.ctx.moveTo(x, y);
+            hasStarted = true;
+        } else {
+            this.ctx.lineTo(x, y);
+        }
+    }
+    
+    if (hasStarted) {
+        this.ctx.stroke();
+    }
+}
     }
     
     animate() {
@@ -557,6 +603,8 @@ gridBackground.speed = parseFloat(document.getElementById('gridSpeed').value);
 gridBackground.gridSize = 60 - parseInt(document.getElementById('gridDensity').value);
 gridBackground.gridColor = document.getElementById('gridColor').value;
 gridBackground.lineThickness = parseFloat(document.getElementById('gridThickness').value);
+gridBackground.waveAmplitude = parseFloat(document.getElementById('waveAmplitude').value);
+gridBackground.waveFrequency = parseFloat(document.getElementById('waveFrequency').value);
 
 // Initialize animator
 const animator = new DiffusionTextAnimator();
@@ -593,34 +641,75 @@ function drawGridBackground(ctx, width, height, time) {
     
     const offset = (time * speed) % gridSize; // Now uses frame counter
     
-    // Rest stays the same...
     for (let i = 0; i < 50; i++) {
         const distance = i * gridSize + offset;
         const perspective = 200 / (200 + distance);
-        const y = horizon + (height - horizon) * perspective;
+        const baseY = horizon + (height - horizon) * perspective;
         
-        if (y > height) continue;
+        if (baseY > height) continue;
         
         ctx.globalAlpha = perspective * 1.2;
         ctx.lineWidth = Math.max(0.5, perspective * 2 * gridBackground.lineThickness);
         
         ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
+        for (let x = 0; x <= width; x += 5) {
+            // Use consistent wave amplitude regardless of perspective
+            const waveOffset = Math.sin((x * gridBackground.waveFrequency) + (time * 0.05)) * gridBackground.waveAmplitude;
+            const y = baseY + waveOffset;
+            
+            if (x === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
         ctx.stroke();
     }
     
+    // Vertical perspective lines that follow the wave contours
+    const verticalSpacing = 30 / this.gridSize * 20;
     for (let i = -100; i <= 100; i++) {
-        const x = (i / 20) * width;
+        const xAtBottom = (i / verticalSpacing) * width;
         const vanishX = width / 2;
         
-        ctx.globalAlpha = 0.4;
-        ctx.lineWidth = 1.5 * gridBackground.lineThickness;
+        this.ctx.globalAlpha = 0.4;
+        this.ctx.lineWidth = 1.5 * this.lineThickness;
         
-        ctx.beginPath();
-        ctx.moveTo(x, height);
-        ctx.lineTo(vanishX, horizon);
-        ctx.stroke();
+        this.ctx.beginPath();
+        
+        let hasStarted = false;
+        
+        // Draw vertical lines by sampling wave at fixed X positions
+        for (let step = 0; step <= 100; step++) { // Increased steps for better coverage
+            const distance = step * this.gridSize * 0.5; // Smaller step size
+            const perspective = 200 / (200 + distance);
+            
+            if (perspective <= 0.01) break; // Stop when too small
+            
+            // Keep X position constant for this vertical line
+            const x = xAtBottom + (vanishX - xAtBottom) * (1 - perspective);
+            
+            // Sample the wave at this X position
+            const baseY = horizon + (height - horizon) * perspective;
+            const waveOffset = Math.sin((x * this.waveFrequency) + (this.time * 0.05)) * this.waveAmplitude;
+            const y = baseY + waveOffset;
+            
+            if (y > height) {
+                if (hasStarted) break; // Only break if we've started drawing
+                continue;
+            }
+            
+            if (!hasStarted) {
+                this.ctx.moveTo(x, y);
+                hasStarted = true;
+            } else {
+                this.ctx.lineTo(x, y);
+            }
+        }
+        
+        if (hasStarted) {
+            this.ctx.stroke();
+        }
     }
     
     ctx.globalAlpha = 1;
