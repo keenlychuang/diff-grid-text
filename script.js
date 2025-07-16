@@ -525,51 +525,53 @@ class GridBackground {
             this.ctx.stroke();
         }
         
-// Vertical perspective lines that follow the wave contours
-const verticalSpacing = 30 / this.gridSize * 20;
-for (let i = -100; i <= 100; i++) {
-    const xAtBottom = (i / verticalSpacing) * width;
-    const vanishX = width / 2;
-    
-    this.ctx.globalAlpha = 0.4;
-    this.ctx.lineWidth = 1.5 * this.lineThickness;
-    
-    this.ctx.beginPath();
-    
-    let hasStarted = false;
-    
-    // Draw vertical lines by sampling wave at fixed X positions
-    for (let step = 0; step <= 100; step++) { // Increased steps for better coverage
-        const distance = step * this.gridSize * 0.5; // Smaller step size
-        const perspective = 200 / (200 + distance);
+    // Vertical perspective lines that follow the wave contours
+    const verticalSpacing = 30 / this.gridSize * 20;
+    for (let i = -100; i <= 100; i++) {
+        const xAtBottom = (i / verticalSpacing) * width;
+        const vanishX = width / 2;
         
-        if (perspective <= 0.01) break; // Stop when too small
+        this.ctx.globalAlpha = 0.4;
+        this.ctx.lineWidth = 1.5 * this.lineThickness;
         
-        // Keep X position constant for this vertical line
-        const x = xAtBottom + (vanishX - xAtBottom) * (1 - perspective);
+        this.ctx.beginPath();
         
-        // Sample the wave at this X position
-        const baseY = horizon + (height - horizon) * perspective;
-        const waveOffset = Math.sin((x * this.waveFrequency) + (this.time * 0.05)) * this.waveAmplitude;
-        const y = baseY + waveOffset;
+        let hasStarted = false;
         
-        if (y > height) {
-            if (hasStarted) break; // Only break if we've started drawing
-            continue;
+        // Draw vertical lines by sampling wave at fixed X positions
+        for (let step = 0; step <= 100; step++) { // Increased steps for better coverage
+            const distance = step * this.gridSize * 0.5; // Smaller step size
+            const perspective = 200 / (200 + distance);
+            
+            if (perspective <= 0.01) break; // Stop when too small
+            
+            // Keep X position constant for this vertical line
+            const x = xAtBottom + (vanishX - xAtBottom) * (1 - perspective);
+            
+            // Sample the wave at this X position
+            const baseY = horizon + (height - horizon) * perspective;
+            const waveOffset = Math.sin((x * this.waveFrequency) + (this.time * 0.05)) * this.waveAmplitude;
+            // Fix: clamp Y values to canvas bounds instead of breaking the line
+            const y = Math.max(0, Math.min(height, baseY + waveOffset));
+
+            // Only break if we're way past the bottom and have been drawing
+            if (baseY > height + 50) {
+                if (hasStarted) break;
+                continue;
+            }
+            
+            if (!hasStarted) {
+                this.ctx.moveTo(x, y);
+                hasStarted = true;
+            } else {
+                this.ctx.lineTo(x, y);
+            }
         }
         
-        if (!hasStarted) {
-            this.ctx.moveTo(x, y);
-            hasStarted = true;
-        } else {
-            this.ctx.lineTo(x, y);
+        if (hasStarted) {
+            this.ctx.stroke();
         }
     }
-    
-    if (hasStarted) {
-        this.ctx.stroke();
-    }
-}
     }
     
     animate() {
@@ -692,10 +694,11 @@ function drawGridBackground(ctx, width, height, time) {
             // Sample the wave at this X position
             const baseY = horizon + (height - horizon) * perspective;
             const waveOffset = Math.sin((x * this.waveFrequency) + (this.time * 0.05)) * this.waveAmplitude;
-            const y = baseY + waveOffset;
-            
-            if (y > height) {
-                if (hasStarted) break; // Only break if we've started drawing
+            const y = Math.max(0, Math.min(height, baseY + waveOffset));
+
+            // Only break if we're way past the bottom and have been drawing
+            if (baseY > height + 50) {
+                if (hasStarted) break;
                 continue;
             }
             
