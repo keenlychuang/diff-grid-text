@@ -55,12 +55,20 @@
                     <select id="convergenceEffect">
                         <option value="highlight">Highlight</option>
                         <option value="underline">Underline</option>
+                        <option value="particles">Particles</option>
                         <option value="none">None</option>
                     </select>
                 </div>
                 <div class="control-group">
                     <label for="convergenceColor">Accent Color:</label>
                     <input type="color" id="convergenceColor" value="#4a90e2">
+                </div>
+                <div class="control-group">
+                    <label for="convergencePattern">Pattern:</label>
+                    <select id="convergencePattern">
+                        <option value="random">Random</option>
+                        <option value="wave">Wave</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -105,6 +113,10 @@
                 <div class="control-group">
                     <label for="gridColor">Grid Color:</label>
                     <input type="color" id="gridColor" value="#ffffff">
+                </div>
+                <div class="control-group">
+                    <label for="gridThickness">Line Thickness:</label>
+                    <input type="range" id="gridThickness" min="0.5" max="3" value="1" step="0.1">
                 </div>
             </div>
         </div>

@@ -9,6 +9,7 @@ class DiffusionTextAnimator {
         this.isAnimating = false;
         this.animationId = null;
         this.speed = 5;
+        this.lineThickness = 1; 
         this.convergenceDelay = 100;
         this.fontSize = 24;
         this.holdDuration = 1000;
@@ -17,6 +18,7 @@ class DiffusionTextAnimator {
         this.highlightEndTime = 0;
         this.onCycleComplete = null; // Callback for when full cycle completes
         this.recordingStartLine = null;
+        this.convergencePattern = 'random';
         
         // Animation state
         this.animationState = 'converging'; // 'converging', 'holding', 'diffusing'
@@ -32,7 +34,7 @@ class DiffusionTextAnimator {
         this.activeCharSet = this.charSets.mixed;
         this.convergedChars = new Set();
         this.charTimers = new Map();
-        
+        this.initParticleSystem();
         this.textDisplay = document.getElementById('textDisplay');
         this.setupEventListeners();
         this.reset();
@@ -47,6 +49,12 @@ class DiffusionTextAnimator {
             this.currentLineIndex = 0;
             this.targetText = this.textLines[0];
             this.reset();
+        });
+        document.getElementById('gridThickness').addEventListener('input', (e) => {
+            gridBackground.lineThickness = parseFloat(e.target.value);
+        });
+        document.getElementById('convergencePattern').addEventListener('change', (e) => {
+        this.convergencePattern = e.target.value;
         });
 
         document.getElementById('gridSpeed').addEventListener('input', (e) => {
@@ -112,6 +120,9 @@ class DiffusionTextAnimator {
         if (window.gridBackground) {
             gridBackground.updateSize(width, height);
         }
+        if (this.particleCanvas) {
+        this.resizeParticleCanvas();
+        }
     }
     
     reset() {
@@ -128,6 +139,99 @@ class DiffusionTextAnimator {
     getRandomChar() {
         return this.activeCharSet[Math.floor(Math.random() * this.activeCharSet.length)];
     }
+
+    initParticleSystem() {
+        this.particles = [];
+        this.particleCanvas = document.createElement('canvas');
+        this.particleCtx = this.particleCanvas.getContext('2d');
+        
+        // Insert particle canvas before text display
+        const container = document.querySelector('.animation-container');
+        const textDisplay = document.getElementById('textDisplay');
+        container.insertBefore(this.particleCanvas, textDisplay);
+        
+        // Style the particle canvas
+        this.particleCanvas.style.position = 'absolute';
+        this.particleCanvas.style.top = '0';
+        this.particleCanvas.style.left = '0';
+        this.particleCanvas.style.pointerEvents = 'none';
+        this.particleCanvas.style.zIndex = '1';
+        
+        this.resizeParticleCanvas();
+        this.animateParticles();
+    }
+
+    resizeParticleCanvas() {
+        const container = document.querySelector('.animation-container');
+        this.particleCanvas.width = container.offsetWidth;
+        this.particleCanvas.height = container.offsetHeight;
+    }
+
+    createConvergenceParticles(charIndex) {
+        const container = document.querySelector('.animation-container');
+        // const textDisplay = document.getElementById('textDisplay');
+        
+        // Get character position (approximate)
+        const charWidth = this.fontSize * 0.6; // Monospace approximation
+        // const lineHeight = this.fontSize * 1.4;
+        // const lines = this.textLines[this.currentLineIndex].split('\n');
+        const totalWidth = this.targetText.length * charWidth;
+        const startX = (container.offsetWidth - totalWidth) / 2;
+        
+        const charX = startX + (charIndex * charWidth);
+        const charY = container.offsetHeight / 2;
+        
+        // Create 8-12 particles around the character
+        const particleCount = 8 + Math.floor(Math.random() * 5);
+        for (let i = 0; i < particleCount; i++) {
+            this.particles.push({
+                x: charX + (Math.random() - 0.5) * 20,
+                y: charY + (Math.random() - 0.5) * 20,
+                vx: (Math.random() - 0.5) * 4,
+                vy: (Math.random() - 0.5) * 4,
+                life: 1.0,
+                decay: 0.02 + Math.random() * 0.01,
+                size: 2 + Math.random() * 3
+            });
+        }
+    }
+
+    animateParticles() {
+        if (!this.particleCtx) return;
+        
+        // Clear canvas
+        this.particleCtx.clearRect(0, 0, this.particleCanvas.width, this.particleCanvas.height);
+        
+        // Get accent color
+        const accentColor = getComputedStyle(document.documentElement)
+            .getPropertyValue('--convergence-color') || '#4a90e2';
+        
+        // Update and draw particles
+        this.particles = this.particles.filter(particle => {
+            // Update position
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            particle.life -= particle.decay;
+            
+            // Apply slight gravity
+            particle.vy += 0.1;
+            
+            // Draw particle
+            if (particle.life > 0) {
+                this.particleCtx.save();
+                this.particleCtx.globalAlpha = particle.life;
+                this.particleCtx.fillStyle = accentColor;
+                this.particleCtx.beginPath();
+                this.particleCtx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                this.particleCtx.fill();
+                this.particleCtx.restore();
+                return true;
+            }
+            return false;
+        });
+        
+        requestAnimationFrame(() => this.animateParticles());
+    }
     
     startAnimation() {
         if (this.isAnimating) return;
@@ -140,24 +244,29 @@ class DiffusionTextAnimator {
     }
     
     scheduleConvergence() {
-        // Clear any existing timers
         this.charTimers.forEach(timer => clearTimeout(timer));
         this.charTimers.clear();
         
-        // Schedule convergence for each character
         this.targetText.split('').forEach((char, index) => {
             if (char === ' ') {
                 this.convergedChars.add(index);
                 return;
             }
             
-            const delay = Math.random() * this.convergenceDelay * this.targetText.length;
+            let delay;
+            if (this.convergencePattern === 'wave') {
+                // Wave: delay based on position, left to right
+                delay = index * 100; // 100ms between each character
+            } else {
+                // Random: existing behavior
+                delay = Math.random() * this.convergenceDelay * this.targetText.length;
+            }
+            
             const timer = setTimeout(() => {
                 if (this.animationState === 'converging' && this.isAnimating) {
                     this.convergedChars.add(index);
                     this.showConvergenceEffect(index);
                     
-                    // Check if all non-space characters have converged
                     const nonSpaceChars = this.targetText.replace(/ /g, '').length;
                     if (this.convergedChars.size >= nonSpaceChars + this.targetText.split('').filter(c => c === ' ').length) {
                         this.startHoldPhase();
@@ -171,6 +280,10 @@ class DiffusionTextAnimator {
     showConvergenceEffect(convergedIndex) {
         if (this.convergenceEffectType === 'none') {
             return;
+        }
+        if (this.convergenceEffectType === 'particles') {
+            this.createConvergenceParticles(convergedIndex);
+            return; // Exit early for particles-only effect
         }
 
         this.highlightedChar = convergedIndex;
@@ -386,7 +499,8 @@ class GridBackground {
             if (y > height) continue;
             
             this.ctx.globalAlpha = perspective * 1.2;
-            this.ctx.lineWidth = Math.max(0.5, perspective * 2);
+            this.ctx.lineWidth = Math.max(0.5, perspective * 2 * this.lineThickness);
+
             
             this.ctx.beginPath();
             this.ctx.moveTo(0, y);
@@ -402,7 +516,8 @@ class GridBackground {
             const vanishX = width / 2;
             
             this.ctx.globalAlpha = 0.4; // Increased from 0.2
-            this.ctx.lineWidth = 1.5; // Increased from 1
+            this.ctx.lineWidth = 1.5 * this.lineThickness;
+
             
             this.ctx.beginPath();
             this.ctx.moveTo(x, height);
@@ -441,6 +556,7 @@ const gridBackground = new GridBackground();
 gridBackground.speed = parseFloat(document.getElementById('gridSpeed').value);
 gridBackground.gridSize = 60 - parseInt(document.getElementById('gridDensity').value);
 gridBackground.gridColor = document.getElementById('gridColor').value;
+gridBackground.lineThickness = parseFloat(document.getElementById('gridThickness').value);
 
 // Initialize animator
 const animator = new DiffusionTextAnimator();
@@ -486,7 +602,7 @@ function drawGridBackground(ctx, width, height, time) {
         if (y > height) continue;
         
         ctx.globalAlpha = perspective * 1.2;
-        ctx.lineWidth = Math.max(0.5, perspective * 2);
+        ctx.lineWidth = Math.max(0.5, perspective * 2 * gridBackground.lineThickness);
         
         ctx.beginPath();
         ctx.moveTo(0, y);
@@ -499,7 +615,7 @@ function drawGridBackground(ctx, width, height, time) {
         const vanishX = width / 2;
         
         ctx.globalAlpha = 0.4;
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1.5 * gridBackground.lineThickness;
         
         ctx.beginPath();
         ctx.moveTo(x, height);
