@@ -50,6 +50,13 @@ class DiffusionTextAnimator {
             this.targetText = this.textLines[0];
             this.reset();
         });
+        document.getElementById('fontWeight').addEventListener('change', (e) => {
+            this.textDisplay.style.fontWeight = e.target.value;
+        });
+
+        document.getElementById('fontColor').addEventListener('input', (e) => {
+            this.textDisplay.style.color = e.target.value;
+        });
         document.getElementById('fieldType').addEventListener('change', (e) => {
             gridBackground.fieldType = e.target.value;
         });
@@ -898,13 +905,15 @@ function exportAsWebM() {
     function drawLoop() {
         if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
         
-        ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
+        ctx.fillStyle = document.getElementById('fontColor').value;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         drawGridBackground(ctx, canvas.width, canvas.height, frameCounter++);
         
         ctx.fillStyle = getComputedStyle(document.body).color;
         ctx.font = `${animator.fontSize * 2}px monospace`;
+        const fontWeight = document.getElementById('fontWeight').value;
+        ctx.font = `${fontWeight} ${animator.fontSize * 2}px monospace`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(animator.currentText, canvas.width/2, canvas.height/2);
