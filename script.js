@@ -92,6 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('gridColor').addEventListener('input', (e) => {
             gridBackground.gridColor = e.target.value;
+            // Force redraw with new color
+            gridBackground.draw();
         });
 
         document.getElementById('convergenceEffect').addEventListener('change', (e) => {
@@ -788,7 +790,8 @@ function drawGridLinesBackground(ctx, width, height, time) {
     const horizon = height * 0.05 - 100;
     
     const isLight = document.body.classList.contains('light');
-    ctx.strokeStyle = isLight ? '#00000060' : '#ffffff60';
+    const opacity = isLight ? '30' : '60'; // Different opacity for light/dark
+    ctx.strokeStyle = gridBackground.gridColor + opacity;
     
     const offset = (time * speed) % gridSize; // Now uses frame counter
     
