@@ -50,6 +50,8 @@ body.light {
     max-width: 1200px;
     margin: 0 auto;
     margin-bottom: 30px;
+    width: 100%; /* Add fix ed width */
+    min-width: 0; /* Prevent flex shrinking */
 }
 
 .control-section {
@@ -283,6 +285,7 @@ button:hover {
     border: 1px solid #333;
     border-radius: 8px;
     overflow: hidden;
+    margin-bottom: 30px;
 }
 
 body.light .animation-container {

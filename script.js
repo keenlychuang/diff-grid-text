@@ -50,13 +50,13 @@ class DiffusionTextAnimator {
             this.reset();
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Colors & Theme, Convergence, and Background Field start collapsed
-            const sections = document.querySelectorAll('.control-section');
-            sections[1].classList.add('collapsed'); // Colors & Theme
-            sections[3].classList.add('collapsed'); // Convergence
-            sections[4].classList.add('collapsed'); // Background Field
-        });
+document.addEventListener('DOMContentLoaded', () => {
+    const sections = document.querySelectorAll('.control-section');
+    // Only Text & Style (index 0) stays open, rest are collapsed
+    for (let i = 1; i < sections.length; i++) {
+        sections[i].classList.add('collapsed');
+    }
+});
         document.getElementById('fontWeight').addEventListener('change', (e) => {
             this.textDisplay.style.fontWeight = e.target.value;
         });
@@ -660,7 +660,7 @@ function toggleSection(header) {
 }
 
 function randomizeSettings() {
-    // Randomize all control values
+    // Existing randomizations
     document.getElementById('speedSlider').value = Math.floor(Math.random() * 10) + 1;
     document.getElementById('convergenceDelay').value = Math.floor(Math.random() * 500);
     document.getElementById('holdDuration').value = Math.floor(Math.random() * 4000) + 1000;
@@ -668,10 +668,47 @@ function randomizeSettings() {
     document.getElementById('gridSpeed').value = (Math.random() * 2.5).toFixed(1);
     document.getElementById('gridDensity').value = Math.floor(Math.random() * 40);
     
+    // New randomizations
+    // Font
+    const fonts = document.getElementById('fontSelect').options;
+    document.getElementById('fontSelect').selectedIndex = Math.floor(Math.random() * fonts.length);
+    
+    // Font Weight
+    const weights = document.getElementById('fontWeight').options;
+    document.getElementById('fontWeight').selectedIndex = Math.floor(Math.random() * weights.length);
+    
+    // Colors (generate random hex colors)
+    document.getElementById('fontColor').value = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+    document.getElementById('convergenceColor').value = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+    document.getElementById('gridColor').value = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+    
+    // Convergence Effect
+    const effects = document.getElementById('convergenceEffect').options;
+    document.getElementById('convergenceEffect').selectedIndex = Math.floor(Math.random() * effects.length);
+    
+    // Convergence Pattern
+    const patterns = document.getElementById('convergencePattern').options;
+    document.getElementById('convergencePattern').selectedIndex = Math.floor(Math.random() * patterns.length);
+    
+    // Field Type
+    const fieldTypes = document.getElementById('fieldType').options;
+    document.getElementById('fieldType').selectedIndex = Math.floor(Math.random() * fieldTypes.length);
+    
     // Trigger change events to update the animation
     document.getElementById('speedSlider').dispatchEvent(new Event('input'));
     document.getElementById('convergenceDelay').dispatchEvent(new Event('input'));
-    // ... add more as needed
+    document.getElementById('holdDuration').dispatchEvent(new Event('input'));
+    document.getElementById('fontSize').dispatchEvent(new Event('input'));
+    document.getElementById('gridSpeed').dispatchEvent(new Event('input'));
+    document.getElementById('gridDensity').dispatchEvent(new Event('input'));
+    document.getElementById('fontSelect').dispatchEvent(new Event('change'));
+    document.getElementById('fontWeight').dispatchEvent(new Event('change'));
+    document.getElementById('fontColor').dispatchEvent(new Event('input'));
+    document.getElementById('convergenceColor').dispatchEvent(new Event('input'));
+    document.getElementById('gridColor').dispatchEvent(new Event('input'));
+    document.getElementById('convergenceEffect').dispatchEvent(new Event('change'));
+    document.getElementById('convergencePattern').dispatchEvent(new Event('change'));
+    document.getElementById('fieldType').dispatchEvent(new Event('change'));
 }
 
 // Initialize grid background
