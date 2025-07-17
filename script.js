@@ -713,6 +713,25 @@ function randomizeSettings() {
     document.getElementById('fieldType').dispatchEvent(new Event('change'));
 }
 
+function updateSectionPreviews() {
+    // Animation & Effects preview
+    const width = document.getElementById('animationWidth').value;
+    const height = document.getElementById('animationHeight').value;
+    const speed = document.getElementById('speedSlider').value;
+    const effect = document.getElementById('convergenceEffect').value;
+    
+    const animationPreview = document.querySelector('.control-section .section-preview');
+    if (animationPreview) {
+        animationPreview.textContent = `${width}×${height}px, Speed: ${speed}, ${effect} effect`;
+    }
+}
+
+// Add event listeners to update previews
+['animationWidth', 'animationHeight', 'speedSlider', 'convergenceEffect'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateSectionPreviews);
+    document.getElementById(id).addEventListener('change', updateSectionPreviews);
+});
+
 // Initialize grid background
 const gridBackground = new GridBackground();
 gridBackground.speed = parseFloat(document.getElementById('gridSpeed').value);

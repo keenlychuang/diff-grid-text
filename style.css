@@ -42,16 +42,59 @@ body.light {
     color: #333333;
 }
 
+/* Main control buttons - match other sections width */
+.main-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    margin: 20px 0;
+    max-width: 1200px;
+    margin: 20px auto;
+    width: 100%;
+}
+
+.main-controls button {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1; /* Equal width distribution */
+    text-align: center;
+}
+
+.main-controls button:hover {
+    background: #4a90e2;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.main-controls .theme-toggle {
+    background: #4a90e2;
+    color: white;
+    border: none;
+}
+
+
+/* For smaller screens, make buttons even more compact */
+@media (max-width: 768px) {
+    .main-controls button {
+        padding: 6px 10px;
+        font-size: 12px;
+        gap: 6px;
+    }
+}
+
 /* New horizontal layout controls */
-.controls {
+.settings-sections {
     display: flex;
     flex-direction: column;
     gap: 8px;
     max-width: 1200px;
     margin: 0 auto;
-    margin-bottom: 30px;
-    width: 100%; /* Add fix ed width */
-    min-width: 0; /* Prevent flex shrinking */
+    width: 100%;
+    min-width: 0;
 }
 
 .control-section {
@@ -285,6 +328,7 @@ button:hover {
     border: 1px solid #333;
     border-radius: 8px;
     overflow: hidden;
+    margin-top: 15px;
     margin-bottom: 30px;
 }
 
