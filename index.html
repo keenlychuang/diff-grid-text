@@ -6,167 +6,228 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <title>Diffusion-Field Text Animation Generator</title>
     <link rel="stylesheet" href="style.css">
-    <style>body { position: relative; }</style>
 </head>
 <body>
     <div class="app-title"># Diffusion-Field Text Generator</div>
-    <div class="controls">
-        <div class="control-section">
-            <h3>Animation Settings</h3>
-            <div class="control-row">
-                <div class="control-group">
-                    <label for="animationWidth">Width (px):</label>
-                    <input type="number" id="animationWidth" min="200" max="1200" value="800">
-                </div>
-                <div class="control-group">
-                    <label for="animationHeight">Height (px):</label>
-                    <input type="number" id="animationHeight" min="200" max="800" value="400">
-                </div>
-            </div>
-        </div>
-
-        <div class="control-section">
-            <h3>Timing</h3>
-            <div class="control-row">
-                <div class="control-group">
-                    <label for="speedSlider">Speed:</label>
-                    <input type="range" id="speedSlider" min="1" max="10" value="5">
-                </div>
-                <div class="control-group">
-                    <label for="convergenceDelay">Convergence Delay:</label>
-                    <input type="range" id="convergenceDelay" min="0" max="500" value="100">
-                </div>
-                <div class="control-group">
-                    <label for="holdDuration">Hold Duration (ms):</label>
-                    <input type="range" id="holdDuration" min="1000" max="5000" value="2000">
-                </div>
-                <div class="control-group">
-                    <label for="diffuseOutSpeed">Diffuse Out Speed:</label>
-                    <input type="range" id="diffuseOutSpeed" min="1" max="10" value="7">
-                </div>
-            </div>
-        </div>
-
-        <div class="control-section">
-            <h3>Convergence</h3>
-            <div class="control-row">
-                <div class="control-group">
-                    <label for="convergenceEffect">Convergence Effect:</label>
-                    <select id="convergenceEffect">
-                        <option value="highlight">Highlight</option>
-                        <option value="underline">Underline</option>
-                        <option value="particles">Particles</option>
-                        <option value="none">None</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label for="convergenceColor">Accent Color:</label>
-                    <input type="color" id="convergenceColor" value="#4a90e2">
-                </div>
-                <div class="control-group">
-                    <label for="convergencePattern">Pattern:</label>
-                    <select id="convergencePattern">
-                        <option value="random">Random</option>
-                        <option value="wave">Wave</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <div class="control-section">
-            <h3>Text & Style</h3>
-            <div class="control-row">
-                <div class="control-group">
-                    <label for="textInput">Text lines:</label>
-                    <textarea id="textInput">Text Here</textarea>
-                </div>
-                <div class="control-group">
-                    <label for="fontSelect">Font:</label>
-                    <select id="fontSelect">
-                        <option value="'Courier New', monospace">Courier New</option>
-                        <option value="'SF Mono', Monaco, monospace">SF Mono</option>
-                        <option value="'Fira Code', monospace">Fira Code</option>
-                        <option value="'JetBrains Mono', monospace">JetBrains</option>
-                        <option value="'Source Code Pro', monospace">Source Code</option>
-                        <option value="'Roboto Mono', monospace">Roboto Mono</option>
-                        <option value="'Ubuntu Mono', monospace">Ubuntu Mono</option>
-                        <option value="Georgia, serif">Georgia</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label for="fontSize">Size:</label>
-                    <input type="range" id="fontSize" min="16" max="48" value="24">
-                </div>
-                <div class="control-group">
-                    <label for="fontWeight">Font Weight:</label>
-                    <select id="fontWeight">
-                        <option value="normal">Normal</option>
-                        <option value="bold">Bold</option>
-                        <option value="600">Semi-Bold</option>
-                        <option value="300">Light</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label for="fontColor">Font Color:</label>
-                    <input type="color" id="fontColor" value="#ffffff">
-                </div>
-            </div>
-        </div>
-        <div class="control-section">
-            <h3>Field Background</h3>
-            <div class="control-row">
-                <div class="control-group">
-                    <label for="gridSpeed">Speed:</label>
-                    <input type="range" id="gridSpeed" min="0" max="2.5" value="1" step="0.1">
-                </div>
-                <div class="control-group">
-                    <label for="gridDensity">Density:</label>
-                    <input type="range" id="gridDensity" min="0" max="40" value="30">
-                </div>
-                <div class="control-group">
-                    <label for="gridColor">Grid Color:</label>
-                    <input type="color" id="gridColor" value="#ffffff">
-                </div>
-                <div class="control-group">
-                    <label for="gridThickness">Line Thickness:</label>
-                    <input type="range" id="gridThickness" min="0.5" max="3" value="1" step="0.1">
-                </div>
-                <div class="control-group">
-                    <label for="waveAmplitude">Wave Amplitude:</label>
-                    <input type="range" id="waveAmplitude" min="0" max="20" value="10">
-                </div>
-                <div class="control-group">
-                    <label for="waveFrequency">Wave Frequency:</label>
-                    <input type="range" id="waveFrequency" min="0.000" max="0.01" value="0.005" step="0.001">
-                </div>
-                <div class="control-group">
-                    <label for="fieldType">Field Type:</label>
-                    <select id="fieldType">
-                        <option value="lines">Grid Lines</option>
-                        <option value="dots">Dot Field</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <div class="control-section">
-            <h3>Controls</h3>
-            <div class="button-grid">
-                <button onclick="startAnimation()">▶️ Start</button>
-                <button onclick="stopAnimation()">⏹️ Stop</button>
-                <button onclick="resetAnimation()">🔄 Reset</button>
-                <button onclick="randomizeSettings()">⚡ Randomize</button>
-                <button class="theme-toggle" onclick="toggleTheme()">🌓 Theme</button>
-            </div>
-        </div>
-    </div>
-
     <div class="animation-container">
         <div class="text-display" id="textDisplay"></div>
     </div>
+    
+    <div class="controls">
+        
+        <!-- Text & Style -->
+        <div class="control-section">
+            <div class="control-header" onclick="toggleSection(this)">
+                <div class="control-title">
+                    <span class="dropdown-arrow">▼</span>
+                    Text & Style
+                </div>
+                <div class="section-preview">Font: Courier New, Size: 24px</div>
+            </div>
+            <div class="section-content">
+                <div class="text-grid">
+                    <div class="control-group">
+                        <label for="textInput">Text lines:</label>
+                        <textarea id="textInput" placeholder="Line 1&#10;Line 2&#10;Line 3">Text Here</textarea>
+                    </div>
+                    <div class="text-controls">
+                        <div class="control-group">
+                            <label for="fontSelect">Font:</label>
+                            <select id="fontSelect">
+                                <option value="'Courier New', monospace">Courier New</option>
+                                <option value="'SF Mono', Monaco, monospace">SF Mono</option>
+                                <option value="'Fira Code', monospace">Fira Code</option>
+                                <option value="'JetBrains Mono', monospace">JetBrains</option>
+                                <option value="'Source Code Pro', monospace">Source Code</option>
+                                <option value="'Roboto Mono', monospace">Roboto Mono</option>
+                                <option value="'Ubuntu Mono', monospace">Ubuntu Mono</option>
+                                <option value="Georgia, serif">Georgia</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="fontSize">Size:</label>
+                            <input type="range" id="fontSize" min="16" max="48" value="24">
+                        </div>
+                        <div class="control-group">
+                            <label for="fontWeight">Weight:</label>
+                            <select id="fontWeight">
+                                <option value="normal">Normal</option>
+                                <option value="bold">Bold</option>
+                                <option value="600">Semi-Bold</option>
+                                <option value="300">Light</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colors & Theme -->
+        <div class="control-section collapsed">
+            <div class="control-header" onclick="toggleSection(this)">
+                <div class="control-title">
+                    <span class="dropdown-arrow">▼</span>
+                    Colors & Theme
+                </div>
+                <div class="section-preview">Dark mode, White text, Blue accent</div>
+            </div>
+            <div class="section-content">
+                <div class="control-grid">
+                    <div class="control-group">
+                        <label for="fontColor">Font Color:</label>
+                        <input type="color" id="fontColor" value="#ffffff">
+                    </div>
+                    <div class="control-group">
+                        <label for="convergenceColor">Accent Color:</label>
+                        <input type="color" id="convergenceColor" value="#4a90e2">
+                    </div>
+                    <div class="control-group">
+                        <label for="gridColor">Grid Color:</label>
+                        <input type="color" id="gridColor" value="#ffffff">
+                    </div>
+                    <div class="control-group">
+                        <label>Theme:</label>
+                        <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Animation Settings -->
+        <div class="control-section">
+            <div class="control-header" onclick="toggleSection(this)">
+                <div class="control-title">
+                    <span class="dropdown-arrow">▼</span>
+                    Animation
+                </div>
+                <div class="section-preview">800×400px, Speed: 5</div>
+            </div>
+            <div class="section-content">
+                <div class="control-grid">
+                    <div class="control-group">
+                        <label for="animationWidth">Width (px):</label>
+                        <input type="number" id="animationWidth" min="200" max="1200" value="800">
+                    </div>
+                    <div class="control-group">
+                        <label for="animationHeight">Height (px):</label>
+                        <input type="number" id="animationHeight" min="200" max="800" value="400">
+                    </div>
+                    <div class="control-group">
+                        <label for="speedSlider">Speed:</label>
+                        <input type="range" id="speedSlider" min="1" max="10" value="5">
+                    </div>
+                    <div class="control-group">
+                        <label for="convergenceDelay">Convergence Delay:</label>
+                        <input type="range" id="convergenceDelay" min="0" max="500" value="100">
+                    </div>
+                    <div class="control-group">
+                        <label for="holdDuration">Hold Duration (ms):</label>
+                        <input type="range" id="holdDuration" min="1000" max="5000" value="2000">
+                    </div>
+                    <div class="control-group">
+                        <label for="diffuseOutSpeed">Diffuse Out Speed:</label>
+                        <input type="range" id="diffuseOutSpeed" min="1" max="10" value="7">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Convergence Effects -->
+        <div class="control-section collapsed">
+            <div class="control-header" onclick="toggleSection(this)">
+                <div class="control-title">
+                    <span class="dropdown-arrow">▼</span>
+                    Convergence
+                </div>
+                <div class="section-preview">Highlight, Random pattern</div>
+            </div>
+            <div class="section-content">
+                <div class="control-grid">
+                    <div class="control-group">
+                        <label for="convergenceEffect">Effect:</label>
+                        <select id="convergenceEffect">
+                            <option value="highlight">Highlight</option>
+                            <option value="underline">Underline</option>
+                            <option value="particles">Particles</option>
+                            <option value="none">None</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="convergencePattern">Pattern:</label>
+                        <select id="convergencePattern">
+                            <option value="random">Random</option>
+                            <option value="wave">Wave</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Background Field -->
+        <div class="control-section collapsed">
+            <div class="control-header" onclick="toggleSection(this)">
+                <div class="control-title">
+                    <span class="dropdown-arrow">▼</span>
+                    Background Field
+                </div>
+                <div class="section-preview">Grid Lines, Wave: 10</div>
+            </div>
+            <div class="section-content">
+                <div class="control-grid">
+                    <div class="control-group">
+                        <label for="fieldType">Type:</label>
+                        <select id="fieldType">
+                            <option value="lines">Grid Lines</option>
+                            <option value="dots">Dot Field</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="gridSpeed">Speed:</label>
+                        <input type="range" id="gridSpeed" min="0" max="2.5" value="1" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label for="gridDensity">Density:</label>
+                        <input type="range" id="gridDensity" min="0" max="40" value="30">
+                    </div>
+                    <div class="control-group">
+                        <label for="gridThickness">Line Thickness:</label>
+                        <input type="range" id="gridThickness" min="0.5" max="3" value="1" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label for="waveAmplitude">Wave Amplitude:</label>
+                        <input type="range" id="waveAmplitude" min="0" max="20" value="10">
+                    </div>
+                    <div class="control-group">
+                        <label for="waveFrequency">Wave Frequency:</label>
+                        <input type="range" id="waveFrequency" min="0.000" max="0.01" value="0.005" step="0.001">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="control-section">
+            <div class="control-header" onclick="toggleSection(this)">
+                <div class="control-title">
+                    <span class="dropdown-arrow">▼</span>
+                    Controls
+                </div>
+                <div class="section-preview">Start, Stop, Reset, Export</div>
+            </div>
+            <div class="section-content">
+                <div class="button-grid">
+                    <button onclick="startAnimation()">▶️ Start</button>
+                    <button onclick="stopAnimation()">⏹️ Stop</button>
+                    <button onclick="resetAnimation()">🔄 Reset</button>
+                    <button onclick="randomizeSettings()">⚡ Randomize</button>
+                    <button onclick="exportAsWebM()">📥 Export</button>
+                </div>
+            </div>
+        </div>
+        
+    </div>
 
     <div class="export-section">
-        <button onclick="exportAsWebM()">📥 Export as WebM</button>
         <div id="exportStatus">
             <div class="progress-indicator" id="progressIndicator" style="display: none;">
                 🎬 Recording: <span id="currentLine"></span>

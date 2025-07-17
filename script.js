@@ -1,4 +1,3 @@
-
 class DiffusionTextAnimator {
     constructor() {
         this.convergenceEffectType = 'highlight';
@@ -49,6 +48,14 @@ class DiffusionTextAnimator {
             this.currentLineIndex = 0;
             this.targetText = this.textLines[0];
             this.reset();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Colors & Theme, Convergence, and Background Field start collapsed
+            const sections = document.querySelectorAll('.control-section');
+            sections[1].classList.add('collapsed'); // Colors & Theme
+            sections[3].classList.add('collapsed'); // Convergence
+            sections[4].classList.add('collapsed'); // Background Field
         });
         document.getElementById('fontWeight').addEventListener('change', (e) => {
             this.textDisplay.style.fontWeight = e.target.value;
@@ -646,6 +653,25 @@ class GridBackground {
         this.canvas.width = parseInt(width);
         this.canvas.height = parseInt(height);
     }
+}
+function toggleSection(header) {
+    const section = header.parentElement;
+    section.classList.toggle('collapsed');
+}
+
+function randomizeSettings() {
+    // Randomize all control values
+    document.getElementById('speedSlider').value = Math.floor(Math.random() * 10) + 1;
+    document.getElementById('convergenceDelay').value = Math.floor(Math.random() * 500);
+    document.getElementById('holdDuration').value = Math.floor(Math.random() * 4000) + 1000;
+    document.getElementById('fontSize').value = Math.floor(Math.random() * 32) + 16;
+    document.getElementById('gridSpeed').value = (Math.random() * 2.5).toFixed(1);
+    document.getElementById('gridDensity').value = Math.floor(Math.random() * 40);
+    
+    // Trigger change events to update the animation
+    document.getElementById('speedSlider').dispatchEvent(new Event('input'));
+    document.getElementById('convergenceDelay').dispatchEvent(new Event('input'));
+    // ... add more as needed
 }
 
 // Initialize grid background

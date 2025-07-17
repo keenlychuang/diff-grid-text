@@ -3,20 +3,21 @@
     padding: 0;
     box-sizing: border-box;
 }
+
 .app-title {
     position: fixed;
     top: 0;
     left: 0;
-    right: 0; /* Add this */
-    width: 100%; /* Add this */
+    right: 0;
+    width: 100%;
     font-size: 18px;
     opacity: 0.9;
     z-index: 1000;
     font-weight: normal;
-    background: rgba(10, 10, 10, 0.9); /* Add background */
-    padding: 15px 20px; /* Adjust padding */
-    text-align: center; /* Center the text */
-    border-bottom: 1px solid #333; /* Optional: add border */
+    background: rgba(10, 10, 10, 0.9);
+    padding: 15px 20px;
+    text-align: center;
+    border-bottom: 1px solid #333;
 }
 
 body.light .app-title {
@@ -32,7 +33,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 60px 20px 20px 20px; /* Changed from padding: 20px; */
+    padding: 60px 20px 20px 20px;
     transition: all 0.3s ease;
 }
 
@@ -41,58 +42,121 @@ body.light {
     color: #333333;
 }
 
+/* New horizontal layout controls */
 .controls {
-    margin-bottom: 30px;
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-    align-items: stretch;
-    width: fit-content; /* Add this to shrink container to content */
-    max-width: 100%;
-}
-
-.control-section:nth-child(3),
-.control-section:last-child {
-    flex: 1;
-}
-
-.control-group {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-}
-
-
-body.light .control-section {
-    border-color: #ccc;
+    gap: 8px;
+    max-width: 1200px;
+    margin: 0 auto;
+    margin-bottom: 30px;
 }
 
 .control-section {
     border: 1px solid #333;
     border-radius: 6px;
+    background: rgba(26, 26, 26, 0.5);
+    overflow: hidden;
+}
+
+body.light .control-section {
+    border-color: #ccc;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.control-header {
+    padding: 10px 15px;
+    background: #1a1a1a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #333;
+    transition: background 0.2s;
+}
+
+.control-header:hover {
+    background: #222;
+}
+
+body.light .control-header {
+    background: #e0e0e0;
+    border-bottom-color: #ccc;
+}
+
+body.light .control-header:hover {
+    background: #d0d0d0;
+}
+
+.control-section.collapsed .control-header {
+    border-bottom: none;
+}
+
+.control-title {
+    font-size: 14px;
+    color: #4a90e2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-arrow {
+    font-size: 12px;
+    transition: transform 0.2s;
+}
+
+.control-section.collapsed .dropdown-arrow {
+    transform: rotate(-90deg);
+}
+
+.section-content {
     padding: 15px;
-    /* Remove: margin-bottom: 15px; */
-    min-width: 250px;
+    display: block;
+}
+
+.control-section.collapsed .section-content {
+    display: none;
+}
+
+.section-preview {
+    font-size: 12px;
+    opacity: 0.6;
+}
+
+.control-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+}
+
+.control-group {
     display: flex;
     flex-direction: column;
+    gap: 4px;
 }
 
 .control-row {
     display: flex;
     gap: 15px;
-    flex-wrap: wrap;
+    margin-bottom: 15px;
 }
 
-.button-group {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+.control-row:last-child {
+    margin-bottom: 0;
 }
 
-.button-grid {
+/* Special layout for text input */
+.text-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 15px;
+    align-items: start;
+}
+
+.text-controls {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 15px;
 }
 
 .converged-char-highlight {
@@ -137,23 +201,40 @@ body.light .control-section {
 }
 
 label {
-    font-size: 12px;
+    font-size: 11px;
     opacity: 0.8;
+    white-space: nowrap;
 }
 
 input, button, select, textarea {
-    padding: 8px 12px;
+    padding: 6px 8px;
     border: 1px solid #333;
     background: #1a1a1a;
     color: #fff;
-    border-radius: 4px;
+    border-radius: 3px;
     font-family: inherit;
-    resize: vertical;
+    font-size: 12px;
+    width: 100%;
 }
 
 textarea {
     min-height: 60px;
-    width: 200px;      /* reduced from 400px */
+    resize: vertical;
+}
+
+input[type="range"] {
+    width: 100%;
+}
+
+input[type="color"] {
+    width: 50px;
+    height: 30px;
+    padding: 0;
+    border: none;
+}
+
+input[type="number"] {
+    width: 80px;
 }
 
 body.light input,
@@ -176,7 +257,8 @@ button {
 }
 
 button:hover {
-    opacity: 0.8;
+    background: #4a90e2;
+    color: white;
 }
 
 .theme-toggle {
@@ -185,13 +267,18 @@ button:hover {
     border: none;
 }
 
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
 .animation-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 800px;        /* Set default instead of 100% */
-    height: 400px;       /* Set default height */
-    /* Remove: flex: 1 and max-width: 800px */
+    width: 800px;
+    height: 400px;
     position: relative;
     border: 1px solid #333;
     border-radius: 8px;
@@ -243,6 +330,7 @@ body.light .progress-bar {
     display: flex;
     gap: 10px;
     align-items: center;
+    justify-content: center;
 }
 
 .status {
