@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <title>Diffusion-Grid Text Animation Generator</title>
+    <title>Diffusion-Field Text Animation Generator</title>
     <link rel="stylesheet" href="style.css">
     <style>body { position: relative; }</style>
 </head>
 <body>
-    <div class="app-title"># Diffusion-Grid Text Generator</div>
+    <div class="app-title"># Diffusion-Field Text Generator</div>
     <div class="controls">
         <div class="control-section">
             <h3>Animation Settings</h3>
@@ -100,7 +100,7 @@
             </div>
         </div>
         <div class="control-section">
-            <h3>Grid Background</h3>
+            <h3>Field Background</h3>
             <div class="control-row">
                 <div class="control-group">
                     <label for="gridSpeed">Speed:</label>
@@ -125,6 +125,13 @@
                 <div class="control-group">
                     <label for="waveFrequency">Wave Frequency:</label>
                     <input type="range" id="waveFrequency" min="0.000" max="0.01" value="0.005" step="0.001">
+                </div>
+                <div class="control-group">
+                    <label for="fieldType">Field Type:</label>
+                    <select id="fieldType">
+                        <option value="lines">Grid Lines</option>
+                        <option value="dots">Dot Field</option>
+                    </select>
                 </div>
             </div>
         </div>

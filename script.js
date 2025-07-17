@@ -50,6 +50,10 @@ class DiffusionTextAnimator {
             this.targetText = this.textLines[0];
             this.reset();
         });
+        document.getElementById('fieldType').addEventListener('change', (e) => {
+            gridBackground.fieldType = e.target.value;
+        });
+
         document.getElementById('waveAmplitude').addEventListener('input', (e) => {
             gridBackground.waveAmplitude = parseFloat(e.target.value);
         });
@@ -473,6 +477,7 @@ class GridBackground {
         this.waveAmplitude = 20;
         this.waveFrequency = 0.01;
         this.isAnimating = true;
+        this.fieldType = 'lines';
         this.animate();
     }
     
@@ -486,8 +491,45 @@ class GridBackground {
         this.resize();
         window.addEventListener('resize', () => this.resize());
     }
-    
+
     draw() {
+        if (this.fieldType === 'dots') {
+            this.drawDotField();
+        } else {
+            this.drawGridLines();
+        }
+    }
+
+    drawDotField() {
+        const { width, height } = this.canvas;
+        this.ctx.clearRect(0, 0, width, height);
+        
+        const horizon = height * 0.05 - 100;
+        const dotSpacing = this.gridSize;
+        const offset = (this.time * this.speed * 0.1) % dotSpacing; 
+        
+        for (let row = 0; row < 50; row++) {
+            for (let col = -75; col <= 75; col++) {
+                const distance = row * dotSpacing + offset; 
+                const perspective = 200 / (200 + distance);
+                
+                if (perspective <= 0.01) continue;
+                
+                const baseY = horizon + (height - horizon) * perspective;
+                const x = width/2 + (col * dotSpacing * perspective);
+                const waveOffset = Math.sin((x * this.waveFrequency) + (this.time * 0.05)) * this.waveAmplitude;
+                const y = baseY + waveOffset;
+                
+                this.ctx.globalAlpha = perspective * 0.8;
+                this.ctx.fillStyle = this.gridColor;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, perspective * 2 * this.lineThickness, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+        }
+    }
+    
+    drawGridLines() {
         const { width, height } = this.canvas;
         this.ctx.clearRect(0, 0, width, height);
         
@@ -634,6 +676,43 @@ let mediaRecorder = null;
 let recordedChunks = [];
 
 function drawGridBackground(ctx, width, height, time) {
+    if (gridBackground.fieldType === 'dots') {
+        drawDotFieldBackground(ctx, width, height, time);
+    } else {
+        drawGridLinesBackground(ctx, width, height, time);
+    }
+}
+
+function drawDotFieldBackground(ctx, width, height, time) {
+    // Remove: const { width, height } = canvas;  
+    ctx.clearRect(0, 0, width, height);
+    
+    const horizon = height * 0.05 - 100;
+    const dotSpacing = gridBackground.gridSize; // Add gridBackground.
+    const offset = (time * gridBackground.speed * 0.1) % dotSpacing; // Add gridBackground.
+    
+    for (let row = 0; row < 50; row++) {
+        for (let col = -75; col <= 75; col++) {
+            const distance = row * dotSpacing + offset; 
+            const perspective = 200 / (200 + distance);
+            
+            if (perspective <= 0.01) continue;
+            
+            const baseY = horizon + (height - horizon) * perspective;
+            const x = width/2 + (col * dotSpacing * perspective);
+            const waveOffset = Math.sin((x * gridBackground.waveFrequency) + (time * 0.05)) * gridBackground.waveAmplitude;
+            const y = baseY + waveOffset;
+            
+            ctx.globalAlpha = perspective * 0.8;
+            ctx.fillStyle = gridBackground.gridColor;
+            ctx.beginPath();    
+            ctx.arc(x, y, perspective * 2 * gridBackground.lineThickness, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+}
+
+function drawGridLinesBackground(ctx, width, height, time) {
     const gridSize = gridBackground.gridSize;
     const speed = gridBackground.speed;
     const horizon = height * 0.05 - 100;
@@ -669,15 +748,15 @@ function drawGridBackground(ctx, width, height, time) {
     }
     
     // Vertical perspective lines that follow the wave contours
-    const verticalSpacing = 30 / this.gridSize * 20;
+    const verticalSpacing = 30 / gridBackground.gridSize * 20;
     for (let i = -100; i <= 100; i++) {
         const xAtBottom = (i / verticalSpacing) * width;
         const vanishX = width / 2;
         
-        this.ctx.globalAlpha = 0.4;
-        this.ctx.lineWidth = 1.5 * this.lineThickness;
+        ctx.globalAlpha = 0.4;
+        ctx.lineWidth = 1.5 * gridBackground.lineThickness;
         
-        this.ctx.beginPath();
+        ctx.beginPath();
         
         let hasStarted = false;
         
@@ -693,7 +772,7 @@ function drawGridBackground(ctx, width, height, time) {
             
             // Sample the wave at this X position
             const baseY = horizon + (height - horizon) * perspective;
-            const waveOffset = Math.sin((x * this.waveFrequency) + (this.time * 0.05)) * this.waveAmplitude;
+            const waveOffset = Math.sin((x * waveFrequency) + (time * 0.05)) * waveAmplitude;
             const y = Math.max(0, Math.min(height, baseY + waveOffset));
 
             // Only break if we're way past the bottom and have been drawing
@@ -703,15 +782,15 @@ function drawGridBackground(ctx, width, height, time) {
             }
             
             if (!hasStarted) {
-                this.ctx.moveTo(x, y);
+                ctx.moveTo(x, y);
                 hasStarted = true;
             } else {
-                this.ctx.lineTo(x, y);
+                ctx.lineTo(x, y);
             }
         }
         
         if (hasStarted) {
-            this.ctx.stroke();
+            ctx.stroke();
         }
     }
     
