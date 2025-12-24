@@ -401,6 +401,34 @@ body.light .export-modal-content {
     font-size: 20px;
     margin-bottom: 20px;
     color: #4a90e2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.export-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #4a90e233;
+    border-top-color: #4a90e2;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.export-modal-content.complete .export-spinner {
+    display: none;
+}
+
+.export-modal-tip {
+    font-size: 11px;
+    opacity: 0.5;
+    margin-top: 12px;
+    font-style: italic;
 }
 
 .export-modal-line {
