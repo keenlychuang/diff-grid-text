@@ -516,6 +516,16 @@ class GridBackground {
         }
     }
 
+    // Helper method to get effective color based on theme
+    getEffectiveColor() {
+        const isLight = document.body.classList.contains('light');
+        // If in light mode and using default white, switch to dark
+        if (isLight && this.gridColor.toLowerCase() === '#ffffff') {
+            return '#333333';
+        }
+        return this.gridColor;
+    }
+
     drawDotField() {
         const { width, height } = this.canvas;
         this.ctx.clearRect(0, 0, width, height);
@@ -523,6 +533,9 @@ class GridBackground {
         const horizon = height * 0.05 - 100;
         const dotSpacing = this.gridSize;
         const offset = (this.time * this.speed * 0.1) % dotSpacing; 
+        
+        // Use theme-aware color
+        const effectiveColor = this.getEffectiveColor();
         
         for (let row = 0; row < 50; row++) {
             for (let col = -75; col <= 75; col++) {
@@ -537,7 +550,7 @@ class GridBackground {
                 const y = baseY + waveOffset;
                 
                 this.ctx.globalAlpha = perspective * 0.8;
-                this.ctx.fillStyle = this.gridColor;
+                this.ctx.fillStyle = effectiveColor;
                 this.ctx.beginPath();
                 this.ctx.arc(x, y, perspective * 2 * this.lineThickness, 0, Math.PI * 2);
                 this.ctx.fill();
@@ -551,9 +564,9 @@ class GridBackground {
         
         const horizon = height * 0.05 - 100;
         
-        // Fix color logic
-        const isLight = document.body.classList.contains('light');
-        this.ctx.strokeStyle = this.gridColor + '60';
+        // Use theme-aware color
+        const effectiveColor = this.getEffectiveColor();
+        this.ctx.strokeStyle = effectiveColor + '60';
         
         const offset = (this.time * this.speed) % this.gridSize;
         
@@ -761,6 +774,8 @@ function resetAnimation() {
 
 function toggleTheme() {
     document.body.classList.toggle('light');
+    // Force grid redraw to pick up new theme colors
+    gridBackground.draw();
 }
 
 let mediaRecorder = null;
@@ -775,12 +790,18 @@ function drawGridBackground(ctx, width, height, time) {
 }
 
 function drawDotFieldBackground(ctx, width, height, time) {
-    // Remove: const { width, height } = canvas;  
     ctx.clearRect(0, 0, width, height);
     
     const horizon = height * 0.05 - 100;
-    const dotSpacing = gridBackground.gridSize; // Add gridBackground.
-    const offset = (time * gridBackground.speed * 0.1) % dotSpacing; // Add gridBackground.
+    const dotSpacing = gridBackground.gridSize;
+    const offset = (time * gridBackground.speed * 0.1) % dotSpacing;
+    
+    // Use theme-aware color
+    const isLight = document.body.classList.contains('light');
+    let effectiveColor = gridBackground.gridColor;
+    if (isLight && gridBackground.gridColor.toLowerCase() === '#ffffff') {
+        effectiveColor = '#333333';
+    }
     
     for (let row = 0; row < 50; row++) {
         for (let col = -75; col <= 75; col++) {
@@ -795,7 +816,7 @@ function drawDotFieldBackground(ctx, width, height, time) {
             const y = baseY + waveOffset;
             
             ctx.globalAlpha = perspective * 0.8;
-            ctx.fillStyle = gridBackground.gridColor;
+            ctx.fillStyle = effectiveColor;
             ctx.beginPath();    
             ctx.arc(x, y, perspective * 2 * gridBackground.lineThickness, 0, Math.PI * 2);
             ctx.fill();
@@ -808,11 +829,16 @@ function drawGridLinesBackground(ctx, width, height, time) {
     const speed = gridBackground.speed;
     const horizon = height * 0.05 - 100;
     
+    // Use theme-aware color
     const isLight = document.body.classList.contains('light');
-    const opacity = isLight ? '30' : '60'; // Different opacity for light/dark
-    ctx.strokeStyle = gridBackground.gridColor + opacity;
+    let effectiveColor = gridBackground.gridColor;
+    if (isLight && gridBackground.gridColor.toLowerCase() === '#ffffff') {
+        effectiveColor = '#333333';
+    }
+    const opacity = isLight ? '30' : '60';
+    ctx.strokeStyle = effectiveColor + opacity;
     
-    const offset = (time * speed) % gridSize; // Now uses frame counter
+    const offset = (time * speed) % gridSize;
     
     for (let i = 0; i < 50; i++) {
         const distance = i * gridSize + offset;
@@ -853,18 +879,18 @@ function drawGridLinesBackground(ctx, width, height, time) {
         let hasStarted = false;
         
         // Draw vertical lines by sampling wave at fixed X positions
-        for (let step = 0; step <= 100; step++) { // Increased steps for better coverage
-            const distance = step * this.gridSize * 0.5; // Smaller step size
+        for (let step = 0; step <= 100; step++) {
+            const distance = step * gridBackground.gridSize * 0.5;
             const perspective = 200 / (200 + distance);
             
-            if (perspective <= 0.01) break; // Stop when too small
+            if (perspective <= 0.01) break;
             
             // Keep X position constant for this vertical line
             const x = xAtBottom + (vanishX - xAtBottom) * (1 - perspective);
             
             // Sample the wave at this X position
             const baseY = horizon + (height - horizon) * perspective;
-            const waveOffset = Math.sin((x * waveFrequency) + (time * 0.05)) * waveAmplitude;
+            const waveOffset = Math.sin((x * gridBackground.waveFrequency) + (time * 0.05)) * gridBackground.waveAmplitude;
             const y = Math.max(0, Math.min(height, baseY + waveOffset));
 
             // Only break if we're way past the bottom and have been drawing
