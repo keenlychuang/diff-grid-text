@@ -15,12 +15,12 @@ class DiffusionTextAnimator {
         this.diffuseOutSpeed = 7;
         this.highlightedChar = undefined;
         this.highlightEndTime = 0;
-        this.onCycleComplete = null; // Callback for when full cycle completes
+        this.onCycleComplete = null;
         this.recordingStartLine = null;
         this.convergencePattern = 'random';
         
         // Animation state
-        this.animationState = 'converging'; // 'converging', 'holding', 'diffusing'
+        this.animationState = 'converging';
         this.stateTimer = null;
         
         // Character sets for diffusion
@@ -50,13 +50,13 @@ class DiffusionTextAnimator {
             this.reset();
         });
 
-document.addEventListener('DOMContentLoaded', () => {
-    const sections = document.querySelectorAll('.control-section');
-    // Only Text & Style (index 0) stays open, rest are collapsed
-    for (let i = 1; i < sections.length; i++) {
-        sections[i].classList.add('collapsed');
-    }
-});
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('.control-section');
+            for (let i = 1; i < sections.length; i++) {
+                sections[i].classList.add('collapsed');
+            }
+        });
+        
         document.getElementById('fontWeight').addEventListener('change', (e) => {
             this.textDisplay.style.fontWeight = e.target.value;
         });
@@ -64,6 +64,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('fontColor').addEventListener('input', (e) => {
             this.textDisplay.style.color = e.target.value;
         });
+        
+        document.getElementById('bgColor').addEventListener('input', (e) => {
+            document.querySelector('.animation-container').style.background = e.target.value;
+        });
+        
         document.getElementById('fieldType').addEventListener('change', (e) => {
             gridBackground.fieldType = e.target.value;
         });
@@ -75,11 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('waveFrequency').addEventListener('input', (e) => {
             gridBackground.waveFrequency = parseFloat(e.target.value);
         });
+        
         document.getElementById('gridThickness').addEventListener('input', (e) => {
             gridBackground.lineThickness = parseFloat(e.target.value);
         });
+        
         document.getElementById('convergencePattern').addEventListener('change', (e) => {
-        this.convergencePattern = e.target.value;
+            this.convergencePattern = e.target.value;
         });
 
         document.getElementById('gridSpeed').addEventListener('input', (e) => {
@@ -87,24 +94,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.getElementById('gridDensity').addEventListener('input', (e) => {
-            gridBackground.gridSize = 60 - parseInt(e.target.value); // Invert: 50→10, 10→50
+            gridBackground.gridSize = 60 - parseInt(e.target.value);
         });
 
         document.getElementById('gridColor').addEventListener('input', (e) => {
             gridBackground.gridColor = e.target.value;
-            // Force redraw with new color
             gridBackground.draw();
         });
 
         document.getElementById('convergenceEffect').addEventListener('change', (e) => {
             this.convergenceEffectType = e.target.value;
         });
+        
         document.getElementById('convergenceColor').addEventListener('input', (e) => {
             document.documentElement.style.setProperty('--convergence-color', e.target.value);
         });
+        
         document.getElementById('fontSelect').addEventListener('change', (e) => {
             this.textDisplay.style.fontFamily = e.target.value;
         });
+        
         document.getElementById('animationWidth').addEventListener('input', (e) => {
             this.updateAnimationSize();
         });
@@ -134,21 +143,20 @@ document.addEventListener('DOMContentLoaded', () => {
             this.textDisplay.style.fontSize = this.fontSize + 'px';
         });
     }
+    
     updateAnimationSize() {
         const width = document.getElementById('animationWidth').value;
         const height = document.getElementById('animationHeight').value;
         const container = document.querySelector('.animation-container');
         
-        
         container.style.width = width + 'px';
         container.style.height = height + 'px';
         
-        // Update grid background to match
         if (window.gridBackground) {
             gridBackground.updateSize(width, height);
         }
         if (this.particleCanvas) {
-        this.resizeParticleCanvas();
+            this.resizeParticleCanvas();
         }
     }
     
@@ -172,12 +180,10 @@ document.addEventListener('DOMContentLoaded', () => {
         this.particleCanvas = document.createElement('canvas');
         this.particleCtx = this.particleCanvas.getContext('2d');
         
-        // Insert particle canvas before text display
         const container = document.querySelector('.animation-container');
         const textDisplay = document.getElementById('textDisplay');
         container.insertBefore(this.particleCanvas, textDisplay);
         
-        // Style the particle canvas
         this.particleCanvas.style.position = 'absolute';
         this.particleCanvas.style.top = '0';
         this.particleCanvas.style.left = '0';
@@ -196,19 +202,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     createConvergenceParticles(charIndex) {
         const container = document.querySelector('.animation-container');
-        // const textDisplay = document.getElementById('textDisplay');
-        
-        // Get character position (approximate)
-        const charWidth = this.fontSize * 0.6; // Monospace approximation
-        // const lineHeight = this.fontSize * 1.4;
-        // const lines = this.textLines[this.currentLineIndex].split('\n');
+        const charWidth = this.fontSize * 0.6;
         const totalWidth = this.targetText.length * charWidth;
         const startX = (container.offsetWidth - totalWidth) / 2;
         
         const charX = startX + (charIndex * charWidth);
         const charY = container.offsetHeight / 2;
         
-        // Create 8-12 particles around the character
         const particleCount = 8 + Math.floor(Math.random() * 5);
         for (let i = 0; i < particleCount; i++) {
             this.particles.push({
@@ -226,24 +226,17 @@ document.addEventListener('DOMContentLoaded', () => {
     animateParticles() {
         if (!this.particleCtx) return;
         
-        // Clear canvas
         this.particleCtx.clearRect(0, 0, this.particleCanvas.width, this.particleCanvas.height);
         
-        // Get accent color
         const accentColor = getComputedStyle(document.documentElement)
             .getPropertyValue('--convergence-color') || '#4a90e2';
         
-        // Update and draw particles
         this.particles = this.particles.filter(particle => {
-            // Update position
             particle.x += particle.vx;
             particle.y += particle.vy;
             particle.life -= particle.decay;
-            
-            // Apply slight gravity
             particle.vy += 0.1;
             
-            // Draw particle
             if (particle.life > 0) {
                 this.particleCtx.save();
                 this.particleCtx.globalAlpha = particle.life;
@@ -265,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         this.isAnimating = true;
         this.animationState = 'converging';
-        this.recordingStartLine = this.currentLineIndex; // Track starting point
+        this.recordingStartLine = this.currentLineIndex;
         this.animate();
         this.scheduleConvergence();
     }
@@ -282,10 +275,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let delay;
             if (this.convergencePattern === 'wave') {
-                // Wave: delay based on position, left to right
-                delay = index * 100; // 100ms between each character
+                delay = index * 100;
             } else {
-                // Random: existing behavior
                 delay = Math.random() * this.convergenceDelay * this.targetText.length;
             }
             
@@ -304,13 +295,14 @@ document.addEventListener('DOMContentLoaded', () => {
             this.charTimers.set(index, timer);
         });
     }
+    
     showConvergenceEffect(convergedIndex) {
         if (this.convergenceEffectType === 'none') {
             return;
         }
         if (this.convergenceEffectType === 'particles') {
             this.createConvergenceParticles(convergedIndex);
-            return; // Exit early for particles-only effect
+            return;
         }
 
         this.highlightedChar = convergedIndex;
@@ -347,11 +339,9 @@ document.addEventListener('DOMContentLoaded', () => {
     startDiffuseOut() {
         this.animationState = 'diffusing';
         
-        // Clear any existing timers
         this.charTimers.forEach(timer => clearTimeout(timer));
         this.charTimers.clear();
         
-        // Schedule diffusion out for each character
         const diffusedChars = new Set();
         this.targetText.split('').forEach((char, index) => {
             if (char === ' ') {
@@ -359,13 +349,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            const delay = Math.random() * this.convergenceDelay * this.targetText.length * 0.5; // Faster diffusion
+            const delay = Math.random() * this.convergenceDelay * this.targetText.length * 0.5;
             const timer = setTimeout(() => {
                 if (this.animationState === 'diffusing' && this.isAnimating) {
                     this.convergedChars.delete(index);
                     diffusedChars.add(index);
                     
-                    // Check if all characters have diffused out
                     if (diffusedChars.size >= this.targetText.length) {
                         this.nextLine();
                     }
@@ -377,31 +366,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     nextLine() {
-        // Move to next line
         this.currentLineIndex = (this.currentLineIndex + 1) % this.textLines.length;
         this.targetText = this.textLines[this.currentLineIndex];
         
-        // Reset the display to random characters for new line
         this.currentText = this.targetText.split('').map(char => 
             char === ' ' ? ' ' : this.getRandomChar()
         ).join('');
         
-        // Reset for next line
         this.convergedChars.clear();
         this.animationState = 'converging';
         
-        // Start convergence for new line immediately
         this.scheduleConvergence();
 
-        // Check if we've completed a full cycle
-         if (this.recordingStartLine !== null && 
-        this.currentLineIndex === this.recordingStartLine) {
-        // We're back to the starting line - cycle complete!
-        if (this.onCycleComplete) {
-            setTimeout(() => this.onCycleComplete(), 500); // Small delay after diffusion
+        if (this.recordingStartLine !== null && 
+            this.currentLineIndex === this.recordingStartLine) {
+            if (this.onCycleComplete) {
+                setTimeout(() => this.onCycleComplete(), 500);
+            }
+            this.recordingStartLine = null;
         }
-        this.recordingStartLine = null;
-    }
     }
     
     stopAnimation() {
@@ -412,13 +395,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (this.stateTimer) {
             clearTimeout(this.stateTimer);
         }
-        // Clear all character timers
         this.charTimers.forEach(timer => clearTimeout(timer));
         this.charTimers.clear();
     }
 
     render() {
-        // Check if we should show highlight
         if (this.highlightedChar !== undefined && Date.now() < this.highlightEndTime) {
             this.renderWithHighlight();
         } else {
@@ -450,12 +431,9 @@ document.addEventListener('DOMContentLoaded', () => {
     animate() {
         if (!this.isAnimating) return;
         
-        // Update characters based on animation state
         if (this.animationState === 'holding') {
-            // During holding, keep the converged text
             this.currentText = this.targetText;
         } else {
-            // During converging or diffusing, update characters
             this.currentText = this.targetText.split('').map((targetChar, index) => {
                 if (this.convergedChars.has(index)) {
                     return targetChar;
@@ -470,23 +448,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         this.render();
         
-        // Control animation speed (faster during diffusing)
         const currentSpeed = this.animationState === 'diffusing' ? this.diffuseOutSpeed : this.speed;
         setTimeout(() => {
             this.animationId = requestAnimationFrame(() => this.animate());
         }, 200 - (currentSpeed * 15));
     }
-    
-
 }
 
 class GridBackground {
     constructor() {
-        console.log('GridBackground initializing...');
         this.canvas = document.createElement('canvas');
-        this.speed = 1;           // Make dynamic
-        this.gridSize = 30;       // Make dynamic  
-        this.gridColor = '#ffffff'; // Make dynamic
+        this.speed = 1;
+        this.gridSize = 30;
+        this.gridColor = '#ffffff';
         this.ctx = this.canvas.getContext('2d');
         this.setupCanvas();
         this.time = 0;
@@ -494,6 +468,7 @@ class GridBackground {
         this.waveFrequency = 0.01;
         this.isAnimating = true;
         this.fieldType = 'lines';
+        this.lineThickness = 1;
         this.animate();
     }
     
@@ -502,7 +477,7 @@ class GridBackground {
         const gridContainer = document.createElement('div');
         gridContainer.className = 'grid-background';
         gridContainer.appendChild(this.canvas);
-        container.appendChild(gridContainer); // Changed: append to animation container, not body
+        container.appendChild(gridContainer);
         
         this.resize();
         window.addEventListener('resize', () => this.resize());
@@ -516,10 +491,8 @@ class GridBackground {
         }
     }
 
-    // Helper method to get effective color based on theme
     getEffectiveColor() {
         const isLight = document.body.classList.contains('light');
-        // If in light mode and using default white, switch to dark
         if (isLight && this.gridColor.toLowerCase() === '#ffffff') {
             return '#333333';
         }
@@ -534,7 +507,6 @@ class GridBackground {
         const dotSpacing = this.gridSize;
         const offset = (this.time * this.speed * 0.1) % dotSpacing; 
         
-        // Use theme-aware color
         const effectiveColor = this.getEffectiveColor();
         
         for (let row = 0; row < 50; row++) {
@@ -564,7 +536,6 @@ class GridBackground {
         
         const horizon = height * 0.05 - 100;
         
-        // Use theme-aware color
         const effectiveColor = this.getEffectiveColor();
         this.ctx.strokeStyle = effectiveColor + '60';
         
@@ -581,9 +552,7 @@ class GridBackground {
             this.ctx.lineWidth = Math.max(0.5, perspective * 2 * this.lineThickness);
             
             this.ctx.beginPath();
-            // Create wave by varying Y position across the width
             for (let x = 0; x <= width; x += 5) {
-                // Remove the perspective multiplier from wave amplitude
                 const waveOffset = Math.sin((x * this.waveFrequency) + (this.time * 0.05)) * this.waveAmplitude;
                 const y = baseY + waveOffset;
                 
@@ -596,53 +565,46 @@ class GridBackground {
             this.ctx.stroke();
         }
         
-    // Vertical perspective lines that follow the wave contours
-    const verticalSpacing = 30 / this.gridSize * 20;
-    for (let i = -100; i <= 100; i++) {
-        const xAtBottom = (i / verticalSpacing) * width;
-        const vanishX = width / 2;
-        
-        this.ctx.globalAlpha = 0.4;
-        this.ctx.lineWidth = 1.5 * this.lineThickness;
-        
-        this.ctx.beginPath();
-        
-        let hasStarted = false;
-        
-        // Draw vertical lines by sampling wave at fixed X positions
-        for (let step = 0; step <= 100; step++) { // Increased steps for better coverage
-            const distance = step * this.gridSize * 0.5; // Smaller step size
-            const perspective = 200 / (200 + distance);
+        const verticalSpacing = 30 / this.gridSize * 20;
+        for (let i = -100; i <= 100; i++) {
+            const xAtBottom = (i / verticalSpacing) * width;
+            const vanishX = width / 2;
             
-            if (perspective <= 0.01) break; // Stop when too small
+            this.ctx.globalAlpha = 0.4;
+            this.ctx.lineWidth = 1.5 * this.lineThickness;
             
-            // Keep X position constant for this vertical line
-            const x = xAtBottom + (vanishX - xAtBottom) * (1 - perspective);
+            this.ctx.beginPath();
             
-            // Sample the wave at this X position
-            const baseY = horizon + (height - horizon) * perspective;
-            const waveOffset = Math.sin((x * this.waveFrequency) + (this.time * 0.05)) * this.waveAmplitude;
-            // Fix: clamp Y values to canvas bounds instead of breaking the line
-            const y = Math.max(0, Math.min(height, baseY + waveOffset));
+            let hasStarted = false;
+            
+            for (let step = 0; step <= 100; step++) {
+                const distance = step * this.gridSize * 0.5;
+                const perspective = 200 / (200 + distance);
+                
+                if (perspective <= 0.01) break;
+                
+                const x = xAtBottom + (vanishX - xAtBottom) * (1 - perspective);
+                const baseY = horizon + (height - horizon) * perspective;
+                const waveOffset = Math.sin((x * this.waveFrequency) + (this.time * 0.05)) * this.waveAmplitude;
+                const y = Math.max(0, Math.min(height, baseY + waveOffset));
 
-            // Only break if we're way past the bottom and have been drawing
-            if (baseY > height + 50) {
-                if (hasStarted) break;
-                continue;
+                if (baseY > height + 50) {
+                    if (hasStarted) break;
+                    continue;
+                }
+                
+                if (!hasStarted) {
+                    this.ctx.moveTo(x, y);
+                    hasStarted = true;
+                } else {
+                    this.ctx.lineTo(x, y);
+                }
             }
             
-            if (!hasStarted) {
-                this.ctx.moveTo(x, y);
-                hasStarted = true;
-            } else {
-                this.ctx.lineTo(x, y);
+            if (hasStarted) {
+                this.ctx.stroke();
             }
         }
-        
-        if (hasStarted) {
-            this.ctx.stroke();
-        }
-    }
     }
     
     animate() {
@@ -651,9 +613,11 @@ class GridBackground {
         this.draw();
         requestAnimationFrame(() => this.animate());
     }
+    
     stop() { 
         this.isAnimating = false;
     }
+    
     start() { 
         this.isAnimating = true;
         this.animate();
@@ -664,18 +628,19 @@ class GridBackground {
         this.canvas.width = container.offsetWidth;
         this.canvas.height = container.offsetHeight;
     }
+    
     updateSize(width, height) {
         this.canvas.width = parseInt(width);
         this.canvas.height = parseInt(height);
     }
 }
+
 function toggleSection(header) {
     const section = header.parentElement;
     section.classList.toggle('collapsed');
 }
 
 function randomizeSettings() {
-    // Existing randomizations
     document.getElementById('speedSlider').value = Math.floor(Math.random() * 10) + 1;
     document.getElementById('convergenceDelay').value = Math.floor(Math.random() * 500);
     document.getElementById('holdDuration').value = Math.floor(Math.random() * 4000) + 1000;
@@ -683,51 +648,38 @@ function randomizeSettings() {
     document.getElementById('gridSpeed').value = (Math.random() * 2.5).toFixed(1);
     document.getElementById('gridDensity').value = Math.floor(Math.random() * 40);
     
-    // New randomizations
-    // Font
     const fonts = document.getElementById('fontSelect').options;
     document.getElementById('fontSelect').selectedIndex = Math.floor(Math.random() * fonts.length);
     
-    // Font Weight
     const weights = document.getElementById('fontWeight').options;
     document.getElementById('fontWeight').selectedIndex = Math.floor(Math.random() * weights.length);
     
-    // Colors (generate random hex colors)
     document.getElementById('fontColor').value = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
     document.getElementById('convergenceColor').value = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
     document.getElementById('gridColor').value = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
     
-    // Convergence Effect
     const effects = document.getElementById('convergenceEffect').options;
     document.getElementById('convergenceEffect').selectedIndex = Math.floor(Math.random() * effects.length);
     
-    // Convergence Pattern
     const patterns = document.getElementById('convergencePattern').options;
     document.getElementById('convergencePattern').selectedIndex = Math.floor(Math.random() * patterns.length);
     
-    // Field Type
     const fieldTypes = document.getElementById('fieldType').options;
     document.getElementById('fieldType').selectedIndex = Math.floor(Math.random() * fieldTypes.length);
     
-    // Trigger change events to update the animation
-    document.getElementById('speedSlider').dispatchEvent(new Event('input'));
-    document.getElementById('convergenceDelay').dispatchEvent(new Event('input'));
-    document.getElementById('holdDuration').dispatchEvent(new Event('input'));
-    document.getElementById('fontSize').dispatchEvent(new Event('input'));
-    document.getElementById('gridSpeed').dispatchEvent(new Event('input'));
-    document.getElementById('gridDensity').dispatchEvent(new Event('input'));
-    document.getElementById('fontSelect').dispatchEvent(new Event('change'));
-    document.getElementById('fontWeight').dispatchEvent(new Event('change'));
-    document.getElementById('fontColor').dispatchEvent(new Event('input'));
-    document.getElementById('convergenceColor').dispatchEvent(new Event('input'));
-    document.getElementById('gridColor').dispatchEvent(new Event('input'));
-    document.getElementById('convergenceEffect').dispatchEvent(new Event('change'));
-    document.getElementById('convergencePattern').dispatchEvent(new Event('change'));
-    document.getElementById('fieldType').dispatchEvent(new Event('change'));
+    // Trigger all change events
+    ['speedSlider', 'convergenceDelay', 'holdDuration', 'fontSize', 'gridSpeed', 'gridDensity'].forEach(id => {
+        document.getElementById(id).dispatchEvent(new Event('input'));
+    });
+    ['fontSelect', 'fontWeight', 'convergenceEffect', 'convergencePattern', 'fieldType'].forEach(id => {
+        document.getElementById(id).dispatchEvent(new Event('change'));
+    });
+    ['fontColor', 'convergenceColor', 'gridColor'].forEach(id => {
+        document.getElementById(id).dispatchEvent(new Event('input'));
+    });
 }
 
 function updateSectionPreviews() {
-    // Animation & Effects preview
     const width = document.getElementById('animationWidth').value;
     const height = document.getElementById('animationHeight').value;
     const speed = document.getElementById('speedSlider').value;
@@ -739,7 +691,6 @@ function updateSectionPreviews() {
     }
 }
 
-// Add event listeners to update previews
 ['animationWidth', 'animationHeight', 'speedSlider', 'convergenceEffect'].forEach(id => {
     document.getElementById(id).addEventListener('input', updateSectionPreviews);
     document.getElementById(id).addEventListener('change', updateSectionPreviews);
@@ -774,18 +725,52 @@ function resetAnimation() {
 
 function toggleTheme() {
     document.body.classList.toggle('light');
-    // Force grid redraw to pick up new theme colors
+    const isLight = document.body.classList.contains('light');
+    
+    // Update background color picker to match theme
+    const bgColorInput = document.getElementById('bgColor');
+    if (isLight) {
+        bgColorInput.value = '#f5f5f5';
+        document.querySelector('.animation-container').style.background = '#f5f5f5';
+    } else {
+        bgColorInput.value = '#0a0a0a';
+        document.querySelector('.animation-container').style.background = '#0a0a0a';
+    }
+    
     gridBackground.draw();
 }
 
 // Export Modal Functions
 function showExportModal() {
     const modal = document.getElementById('exportModal');
+    const modalContent = modal.querySelector('.export-modal-content');
+    modalContent.classList.remove('complete');
     modal.classList.add('visible');
     document.getElementById('totalLines').textContent = animator.textLines.length;
     document.getElementById('currentLine').textContent = '1';
     document.getElementById('progressFill').style.width = '0%';
-    document.getElementById('exportStatus').textContent = '';
+    document.getElementById('exportStatus').textContent = 'Capturing frames...';
+    
+    // Calculate rough time estimate
+    const lines = animator.textLines.length;
+    const width = document.querySelector('.animation-container').offsetWidth;
+    const height = document.querySelector('.animation-container').offsetHeight;
+    const pixels = width * height;
+    
+    // Rough estimate: base time + per-line time + encoding overhead based on size
+    const baseTime = 3;
+    const perLineTime = 2;
+    const sizeMultiplier = pixels > 400000 ? 1.5 : 1; // larger canvases take longer
+    const estimatedSeconds = Math.round((baseTime + (lines * perLineTime)) * sizeMultiplier);
+    
+    const tipEl = document.getElementById('exportTip');
+    if (estimatedSeconds < 10) {
+        tipEl.textContent = 'This usually takes a few seconds';
+    } else if (estimatedSeconds < 20) {
+        tipEl.textContent = `This usually takes 10-20 seconds`;
+    } else {
+        tipEl.textContent = `This may take 30+ seconds for ${lines} lines at this size`;
+    }
 }
 
 function hideExportModal() {
@@ -793,20 +778,24 @@ function hideExportModal() {
     modal.classList.remove('visible');
 }
 
-function updateExportProgress(currentLine, totalLines, progress) {
+function updateExportProgress(currentLine, totalLines, progress, status) {
     document.getElementById('currentLine').textContent = currentLine;
     document.getElementById('totalLines').textContent = totalLines;
     document.getElementById('progressFill').style.width = `${progress}%`;
+    if (status) {
+        document.getElementById('exportStatus').textContent = status;
+    }
 }
 
 function showExportSuccess() {
-    document.getElementById('exportStatus').innerHTML = '<span class="success">✅ Video downloaded!</span>';
+    const modalContent = document.querySelector('.export-modal-content');
+    modalContent.classList.add('complete');
+    document.getElementById('exportStatus').innerHTML = '<span class="success">✅ GIF downloaded!</span>';
+    document.getElementById('exportTip').textContent = '';
     setTimeout(hideExportModal, 2000);
 }
 
-let mediaRecorder = null;
-let recordedChunks = [];
-
+// Helper functions for drawing to canvas
 function drawGridBackground(ctx, width, height, time) {
     if (gridBackground.fieldType === 'dots') {
         drawDotFieldBackground(ctx, width, height, time);
@@ -816,13 +805,10 @@ function drawGridBackground(ctx, width, height, time) {
 }
 
 function drawDotFieldBackground(ctx, width, height, time) {
-    ctx.clearRect(0, 0, width, height);
-    
     const horizon = height * 0.05 - 100;
     const dotSpacing = gridBackground.gridSize;
     const offset = (time * gridBackground.speed * 0.1) % dotSpacing;
     
-    // Use theme-aware color
     const isLight = document.body.classList.contains('light');
     let effectiveColor = gridBackground.gridColor;
     if (isLight && gridBackground.gridColor.toLowerCase() === '#ffffff') {
@@ -855,7 +841,6 @@ function drawGridLinesBackground(ctx, width, height, time) {
     const speed = gridBackground.speed;
     const horizon = height * 0.05 - 100;
     
-    // Use theme-aware color
     const isLight = document.body.classList.contains('light');
     let effectiveColor = gridBackground.gridColor;
     if (isLight && gridBackground.gridColor.toLowerCase() === '#ffffff') {
@@ -878,7 +863,6 @@ function drawGridLinesBackground(ctx, width, height, time) {
         
         ctx.beginPath();
         for (let x = 0; x <= width; x += 5) {
-            // Use consistent wave amplitude regardless of perspective
             const waveOffset = Math.sin((x * gridBackground.waveFrequency) + (time * 0.05)) * gridBackground.waveAmplitude;
             const y = baseY + waveOffset;
             
@@ -891,7 +875,6 @@ function drawGridLinesBackground(ctx, width, height, time) {
         ctx.stroke();
     }
     
-    // Vertical perspective lines that follow the wave contours
     const verticalSpacing = 30 / gridBackground.gridSize * 20;
     for (let i = -100; i <= 100; i++) {
         const xAtBottom = (i / verticalSpacing) * width;
@@ -904,22 +887,17 @@ function drawGridLinesBackground(ctx, width, height, time) {
         
         let hasStarted = false;
         
-        // Draw vertical lines by sampling wave at fixed X positions
         for (let step = 0; step <= 100; step++) {
             const distance = step * gridBackground.gridSize * 0.5;
             const perspective = 200 / (200 + distance);
             
             if (perspective <= 0.01) break;
             
-            // Keep X position constant for this vertical line
             const x = xAtBottom + (vanishX - xAtBottom) * (1 - perspective);
-            
-            // Sample the wave at this X position
             const baseY = horizon + (height - horizon) * perspective;
             const waveOffset = Math.sin((x * gridBackground.waveFrequency) + (time * 0.05)) * gridBackground.waveAmplitude;
             const y = Math.max(0, Math.min(height, baseY + waveOffset));
 
-            // Only break if we're way past the bottom and have been drawing
             if (baseY > height + 50) {
                 if (hasStarted) break;
                 continue;
@@ -941,117 +919,204 @@ function drawGridLinesBackground(ctx, width, height, time) {
     ctx.globalAlpha = 1;
 }
 
-let frameCounter = 0; 
-function exportAsWebM() {
-    if (mediaRecorder && mediaRecorder.state === 'recording') return;
+// GIF Export functionality
+let gifExportInProgress = false;
+
+function exportAsGIF() {
+    if (gifExportInProgress) return;
+    gifExportInProgress = true;
     
-    // Show the modal
     showExportModal();
     
-    // Set up canvas and recording
-    const canvas = document.createElement('canvas');
+    // Get settings
     const container = document.querySelector('.animation-container');
-    canvas.width = container.offsetWidth * 2;
-    canvas.height = container.offsetHeight * 2;
+    const width = container.offsetWidth;
+    const height = container.offsetHeight;
+    const totalLines = animator.textLines.length;
+    
+    // Create offscreen canvas for rendering frames
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
     const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
     
-    const stream = canvas.captureStream(30);
+    // Get current styles
+    const bgColor = document.getElementById('bgColor').value;
+    const fontColor = document.getElementById('fontColor').value;
+    const fontFamily = document.getElementById('fontSelect').value.replace(/'/g, '');
+    const fontWeight = document.getElementById('fontWeight').value;
+    const fontSize = animator.fontSize;
     
-    let mimeType = 'video/webm';
-    if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
-        mimeType = 'video/webm;codecs=vp8';
-    } else if (MediaRecorder.isTypeSupported('video/mp4')) {
-        mimeType = 'video/mp4';
+    // Create GIF encoder
+    const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+    });
+    
+    // Animation parameters
+    const fps = 15;
+    const frameDelay = 1000 / fps;
+    const framesPerPhase = {
+        converging: Math.ceil(2000 / frameDelay),  // ~2 seconds converging
+        holding: Math.ceil(animator.holdDuration / frameDelay),
+        diffusing: Math.ceil(1000 / frameDelay)    // ~1 second diffusing
+    };
+    
+    let frameCounter = 0;
+    let currentLineIdx = 0;
+    let phase = 'converging';
+    let phaseFrame = 0;
+    let convergedSet = new Set();
+    let charConvergeFrames = [];
+    
+    // Pre-calculate when each character converges for current line
+    function initLineConvergence(text) {
+        convergedSet.clear();
+        charConvergeFrames = [];
+        
+        text.split('').forEach((char, idx) => {
+            if (char === ' ') {
+                charConvergeFrames.push(0);
+                convergedSet.add(idx);
+            } else {
+                if (animator.convergencePattern === 'wave') {
+                    charConvergeFrames.push(Math.floor(idx * 3));
+                } else {
+                    charConvergeFrames.push(Math.floor(Math.random() * framesPerPhase.converging * 0.8));
+                }
+            }
+        });
     }
     
-    mediaRecorder = new MediaRecorder(stream, { 
-        mimeType,
-        videoBitsPerSecond: 10000000
-    });
-    recordedChunks = [];
+    function getRandomChar() {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
+        return chars[Math.floor(Math.random() * chars.length)];
+    }
     
-    // Track progress
-    let startLine = animator.currentLineIndex;
-    let totalLines = animator.textLines.length;
-    let progressInterval;
-    
-    const updateProgress = () => {
-        let currentLine = animator.currentLineIndex;
-        let linesCompleted = (currentLine - startLine + totalLines) % totalLines;
-        let progress = Math.min((linesCompleted / totalLines) * 100, 100);
+    function renderFrame() {
+        const currentText = animator.textLines[currentLineIdx];
         
-        updateExportProgress(currentLine + 1, totalLines, progress);
-    };
-    
-    // Start progress updates
-    progressInterval = setInterval(updateProgress, 100);
-    
-    // Set up recording event handlers
-    mediaRecorder.ondataavailable = e => {
-        if (e.data.size > 0) recordedChunks.push(e.data);
-    };
-    
-    mediaRecorder.onstop = () => {
-        // Clear interval if still running
-        if (progressInterval) clearInterval(progressInterval);
+        // Clear and draw background
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, width, height);
         
-        const blob = new Blob(recordedChunks, { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `intro-animation.${mimeType.includes('mp4') ? 'mp4' : 'webm'}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        // Draw grid background
+        drawGridBackground(ctx, width, height, frameCounter);
         
-        // Show success in modal
-        showExportSuccess();
-    };
-    
-    // Set up cycle completion callback
-    animator.onCycleComplete = () => {
-        // Stop progress updates first
-        clearInterval(progressInterval);
+        // Build display text based on phase
+        let displayText = '';
         
-        // Show completion in modal
-        updateExportProgress(totalLines, totalLines, 100);
+        if (phase === 'holding') {
+            displayText = currentText;
+        } else {
+            currentText.split('').forEach((char, idx) => {
+                if (char === ' ') {
+                    displayText += ' ';
+                } else if (phase === 'converging') {
+                    if (phaseFrame >= charConvergeFrames[idx]) {
+                        convergedSet.add(idx);
+                        displayText += char;
+                    } else {
+                        displayText += getRandomChar();
+                    }
+                } else if (phase === 'diffusing') {
+                    // Reverse: start converged, progressively randomize
+                    const diffuseFrame = framesPerPhase.diffusing - charConvergeFrames[idx] * 0.5;
+                    if (phaseFrame >= diffuseFrame) {
+                        displayText += getRandomChar();
+                    } else {
+                        displayText += char;
+                    }
+                }
+            });
+        }
         
-        setTimeout(() => {
-            mediaRecorder.stop();
-            animator.stopAnimation();
-        }, 500);
-    };
-    
-    // Start recording and animation
-    mediaRecorder.start();
-    updateProgress();
-    
-    // Draw to canvas loop
-    frameCounter = 0;
-    function drawLoop() {
-        if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
-        
-        ctx.fillStyle = document.getElementById('fontColor').value;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        drawGridBackground(ctx, canvas.width, canvas.height, frameCounter++);
-        
-        ctx.fillStyle = getComputedStyle(document.body).color;
-        ctx.font = `${animator.fontSize * 2}px monospace`;
-        const fontWeight = document.getElementById('fontWeight').value;
-        ctx.font = `${fontWeight} ${animator.fontSize * 2}px monospace`;
+        // Draw text
+        ctx.fillStyle = fontColor;
+        ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(animator.currentText, canvas.width/2, canvas.height/2);
+        ctx.globalAlpha = 1;
+        ctx.fillText(displayText, width / 2, height / 2);
         
-        requestAnimationFrame(drawLoop);
+        return ctx.getImageData(0, 0, width, height);
     }
     
-    drawLoop();
-    animator.startAnimation();
+    function captureFrames() {
+        initLineConvergence(animator.textLines[currentLineIdx]);
+        
+        const totalFrames = totalLines * (framesPerPhase.converging + framesPerPhase.holding + framesPerPhase.diffusing);
+        let capturedFrames = 0;
+        
+        function captureNext() {
+            if (currentLineIdx >= totalLines) {
+                // All frames captured, render GIF
+                updateExportProgress(totalLines, totalLines, 90, 'Encoding GIF...');
+                document.getElementById('exportTip').textContent = 'Encoding is the slow part — almost there!';
+                
+                gif.on('finished', function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'diffusion-animation.gif';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    gifExportInProgress = false;
+                    showExportSuccess();
+                });
+                
+                gif.on('progress', function(p) {
+                    updateExportProgress(totalLines, totalLines, 90 + (p * 10), 'Encoding GIF...');
+                });
+                
+                gif.render();
+                return;
+            }
+            
+            // Render current frame
+            renderFrame();
+            gif.addFrame(ctx, { copy: true, delay: Math.round(frameDelay) });
+            
+            capturedFrames++;
+            frameCounter++;
+            phaseFrame++;
+            
+            // Update progress
+            const progress = Math.floor((capturedFrames / totalFrames) * 85);
+            updateExportProgress(currentLineIdx + 1, totalLines, progress, 'Capturing frames...');
+            
+            // Advance phase/line
+            if (phase === 'converging' && phaseFrame >= framesPerPhase.converging) {
+                phase = 'holding';
+                phaseFrame = 0;
+            } else if (phase === 'holding' && phaseFrame >= framesPerPhase.holding) {
+                phase = 'diffusing';
+                phaseFrame = 0;
+            } else if (phase === 'diffusing' && phaseFrame >= framesPerPhase.diffusing) {
+                // Next line
+                currentLineIdx++;
+                phase = 'converging';
+                phaseFrame = 0;
+                if (currentLineIdx < totalLines) {
+                    initLineConvergence(animator.textLines[currentLineIdx]);
+                }
+            }
+            
+            // Use setTimeout to prevent blocking
+            setTimeout(captureNext, 0);
+        }
+        
+        captureNext();
+    }
+    
+    // Start capture
+    captureFrames();
 }
 
 // Auto-start animation on load
