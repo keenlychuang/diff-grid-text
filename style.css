@@ -350,6 +350,99 @@ body.light .animation-container {
     z-index: 2;
 }
 
+/* Export Modal Styles */
+.export-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.export-modal.visible {
+    display: flex;
+}
+
+.export-modal-content {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 30px 40px;
+    text-align: center;
+    min-width: 320px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+body.light .export-modal-content {
+    background: #fff;
+    border-color: #ccc;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.export-modal-header {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #4a90e2;
+}
+
+.export-modal-line {
+    font-size: 14px;
+    margin-bottom: 15px;
+    opacity: 0.8;
+}
+
+.export-modal .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #333;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+body.light .export-modal .progress-bar {
+    background: #ddd;
+}
+
+.export-modal .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4a90e2, #67a9f0);
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.export-modal-status {
+    font-size: 13px;
+    min-height: 20px;
+}
+
+.export-modal-status .success {
+    color: #4ade80;
+}
+
+body.light .export-modal-status .success {
+    color: #16a34a;
+}
+
 .progress-indicator {
     display: inline-flex;
     align-items: center;
@@ -374,14 +467,6 @@ body.light .progress-bar {
     background: #4a90e2;
     width: 0%;
     transition: width 0.3s ease;
-}
-
-.export-section {
-    margin-top: 30px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    justify-content: center;
 }
 
 .status {
