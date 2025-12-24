@@ -778,6 +778,32 @@ function toggleTheme() {
     gridBackground.draw();
 }
 
+// Export Modal Functions
+function showExportModal() {
+    const modal = document.getElementById('exportModal');
+    modal.classList.add('visible');
+    document.getElementById('totalLines').textContent = animator.textLines.length;
+    document.getElementById('currentLine').textContent = '1';
+    document.getElementById('progressFill').style.width = '0%';
+    document.getElementById('exportStatus').textContent = '';
+}
+
+function hideExportModal() {
+    const modal = document.getElementById('exportModal');
+    modal.classList.remove('visible');
+}
+
+function updateExportProgress(currentLine, totalLines, progress) {
+    document.getElementById('currentLine').textContent = currentLine;
+    document.getElementById('totalLines').textContent = totalLines;
+    document.getElementById('progressFill').style.width = `${progress}%`;
+}
+
+function showExportSuccess() {
+    document.getElementById('exportStatus').innerHTML = '<span class="success">✅ Video downloaded!</span>';
+    setTimeout(hideExportModal, 2000);
+}
+
 let mediaRecorder = null;
 let recordedChunks = [];
 
@@ -919,11 +945,8 @@ let frameCounter = 0;
 function exportAsWebM() {
     if (mediaRecorder && mediaRecorder.state === 'recording') return;
     
-    // Show progress indicator immediately
-    const progressIndicator = document.getElementById('progressIndicator');
-    progressIndicator.style.display = 'inline-flex';
-    document.getElementById('currentLine').textContent = `Line 1 of ${animator.textLines.length}`;
-    document.getElementById('progressFill').style.width = '0%';
+    // Show the modal
+    showExportModal();
     
     // Set up canvas and recording
     const canvas = document.createElement('canvas');
@@ -959,9 +982,7 @@ function exportAsWebM() {
         let linesCompleted = (currentLine - startLine + totalLines) % totalLines;
         let progress = Math.min((linesCompleted / totalLines) * 100, 100);
         
-        document.getElementById('currentLine').textContent = 
-            `Line ${currentLine + 1} of ${totalLines}`;
-        document.getElementById('progressFill').style.width = `${progress}%`;
+        updateExportProgress(currentLine + 1, totalLines, progress);
     };
     
     // Start progress updates
@@ -986,10 +1007,8 @@ function exportAsWebM() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        // Hide progress and show success
-        progressIndicator.style.display = 'none';
-        document.getElementById('exportStatus').innerHTML = 
-            '<div class="status success">✅ Video downloaded!</div>';
+        // Show success in modal
+        showExportSuccess();
     };
     
     // Set up cycle completion callback
@@ -997,9 +1016,8 @@ function exportAsWebM() {
         // Stop progress updates first
         clearInterval(progressInterval);
         
-        // Show completion
-        document.getElementById('currentLine').textContent = 'Complete!';
-        document.getElementById('progressFill').style.width = '100%';
+        // Show completion in modal
+        updateExportProgress(totalLines, totalLines, 100);
         
         setTimeout(() => {
             mediaRecorder.stop();
