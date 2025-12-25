@@ -19,6 +19,7 @@
         <button onclick="resetAnimation()">🔄 Reset</button>
         <button onclick="randomizeSettings()">⚡ Randomize</button>
         <button onclick="exportAsGIF()">📥 Export GIF</button>
+        <button onclick="exportAsWebM()">🎬 Export WebM</button>
     </div>
     
     <div class="settings-sections">
@@ -224,6 +225,7 @@
                     <button onclick="resetAnimation()">🔄 Reset</button>
                     <button onclick="randomizeSettings()">⚡ Randomize</button>
                     <button onclick="exportAsGIF()">📥 Export GIF</button>
+                    <button onclick="exportAsWebM()">🎬 Export WebM</button>
                 </div>
             </div>
         </div>
@@ -235,7 +237,7 @@
         <div class="export-modal-content">
             <div class="export-modal-header">
                 <span class="export-spinner"></span>
-                Creating GIF
+                <span id="exportModalTitle">Creating GIF</span>
             </div>
             <div class="export-modal-line">Line <span id="currentLine">1</span> of <span id="totalLines">3</span></div>
             <div class="progress-bar">

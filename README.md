@@ -8,7 +8,7 @@ A minimalist intro animation where text emerges from digital chaos. Characters r
 - **Multi-line Support**: Cycles through multiple text lines automatically  
 - **Visual Effects**: Highlight, underline, or particle effects on character lock-in
 - **3D Grid Background**: Animated perspective grid with waves
-- **Export Ready**: Generate WebM/MP4 videos for GitHub profiles or presentations
+- **Export Ready**: Generate WebM or GIF videos for GitHub profiles or presentations
 
 ## Quick Start
 
@@ -16,7 +16,16 @@ A minimalist intro animation where text emerges from digital chaos. Characters r
 2. Enter your text (one line per line)
 3. Adjust settings in the control panels
 4. Click **▶️ Start** to begin
-5. Use **📥 Export** to save as video
+5. Use **🎬 Export WebM** (fast) or **📥 Export GIF** (universal)
+
+## Export Options
+
+| Format | Speed | File Size | Compatibility |
+|--------|-------|-----------|---------------|
+| **WebM** | ⚡ Fast (2-5 sec) | Smaller | Modern browsers, Discord, Slack |
+| **GIF** | 🐢 Slower (10-30 sec) | Larger | Universal (GitHub, email, etc.) |
+
+**Tip**: Export as WebM for quick previews, then convert to GIF if needed using tools like [ezgif.com](https://ezgif.com/webm-to-gif) or ffmpeg.
 
 ## Customization
 
