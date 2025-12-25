@@ -530,9 +530,40 @@ function drawGridLinesBackground(ctx, width, height, time) {
 
 let exportInProgress = false;
 
+// Helper function to get the best supported WebM codec
+function getSupportedWebMType() {
+    const types = [
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=vp8',
+        'video/webm;codecs=h264',
+        'video/webm'
+    ];
+    
+    for (const type of types) {
+        if (MediaRecorder.isTypeSupported(type)) {
+            return type;
+        }
+    }
+    return null;
+}
+
 // WebM Export - Uses native MediaRecorder for fast hardware-accelerated encoding
 function exportAsWebM() {
     if (exportInProgress) return;
+    
+    // Check for MediaRecorder support
+    if (typeof MediaRecorder === 'undefined') {
+        alert('WebM export is not supported in this browser. Please use the GIF export option instead.');
+        return;
+    }
+    
+    // Find supported codec
+    const mimeType = getSupportedWebMType();
+    if (!mimeType) {
+        alert('WebM export is not supported in this browser. Please use the GIF export option instead.');
+        return;
+    }
+    
     exportInProgress = true;
     showExportModal('Creating WebM');
     
@@ -554,9 +585,32 @@ function exportAsWebM() {
     const fontWeight = document.getElementById('fontWeight').value;
     const fontSize = animator.fontSize;
     
-    // Setup MediaRecorder
+    // Get current animation settings
+    const convergenceDelay = animator.convergenceDelay;
+    const convergencePattern = animator.convergencePattern;
+    const holdDuration = animator.holdDuration;
+    
+    // Setup MediaRecorder with detected codec
     const stream = canvas.captureStream(30);
-    const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9', videoBitsPerSecond: 5000000 });
+    let mediaRecorder;
+    
+    try {
+        mediaRecorder = new MediaRecorder(stream, { 
+            mimeType: mimeType, 
+            videoBitsPerSecond: 5000000 
+        });
+    } catch (e) {
+        // Fallback without specific options
+        try {
+            mediaRecorder = new MediaRecorder(stream);
+        } catch (e2) {
+            alert('WebM export failed. Please use the GIF export option instead.');
+            exportInProgress = false;
+            hideExportModal();
+            return;
+        }
+    }
+    
     const chunks = [];
     
     mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
@@ -574,14 +628,36 @@ function exportAsWebM() {
         showExportSuccess('WebM');
     };
     
-    // Animation state
+    mediaRecorder.onerror = (e) => {
+        console.error('MediaRecorder error:', e);
+        alert('WebM export failed. Please use the GIF export option instead.');
+        exportInProgress = false;
+        hideExportModal();
+    };
+    
+    // Animation state - match the live preview timing
     const fps = 30;
     const frameDelay = 1000 / fps;
+    
+    // Calculate convergence duration based on actual settings
+    // In live preview: delay = random * convergenceDelay * textLength (ms)
+    // So max convergence time is approximately convergenceDelay * textLength
+    const maxTextLength = Math.max(...animator.textLines.map(l => l.length));
+    const convergenceDurationMs = convergencePattern === 'wave' 
+        ? maxTextLength * 100  // wave pattern: index * 100ms
+        : convergenceDelay * maxTextLength;  // random pattern
+    
+    const diffuseDurationMs = convergenceDelay * maxTextLength * 0.5;
+    
     const framesPerPhase = {
-        converging: Math.ceil(2000 / frameDelay),
-        holding: Math.ceil(animator.holdDuration / frameDelay),
-        diffusing: Math.ceil(1000 / frameDelay)
+        converging: Math.max(30, Math.ceil(convergenceDurationMs / frameDelay)),
+        holding: Math.ceil(holdDuration / frameDelay),
+        diffusing: Math.max(20, Math.ceil(diffuseDurationMs / frameDelay))
     };
+    
+    // Time scaling factor: live preview runs at ~60fps, export at 30fps
+    // We need to scale the time value to match the visual speed
+    const timeScale = 2; // 60fps / 30fps = 2
     
     let frameCounter = 0;
     let currentLineIdx = 0;
@@ -592,7 +668,15 @@ function exportAsWebM() {
     function initLineConvergence(text) {
         charConvergeFrames = text.split('').map((char, idx) => {
             if (char === ' ') return 0;
-            return animator.convergencePattern === 'wave' ? Math.floor(idx * 3) : Math.floor(Math.random() * framesPerPhase.converging * 0.8);
+            if (convergencePattern === 'wave') {
+                // Wave: index * 100ms converted to frames
+                return Math.floor((idx * 100) / frameDelay);
+            } else {
+                // Random: use actual convergenceDelay setting
+                const maxDelayMs = convergenceDelay * text.length;
+                const randomDelayMs = Math.random() * maxDelayMs;
+                return Math.floor(randomDelayMs / frameDelay);
+            }
         });
     }
     
@@ -605,15 +689,23 @@ function exportAsWebM() {
         const currentText = animator.textLines[currentLineIdx];
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, width, height);
-        drawGridBackground(ctx, width, height, frameCounter);
+        
+        // Scale time to match live preview speed
+        const scaledTime = frameCounter * timeScale;
+        drawGridBackground(ctx, width, height, scaledTime);
         
         let displayText = '';
         if (phase === 'holding') displayText = currentText;
         else {
             currentText.split('').forEach((char, idx) => {
                 if (char === ' ') displayText += ' ';
-                else if (phase === 'converging') displayText += phaseFrame >= charConvergeFrames[idx] ? char : getRandomChar();
-                else displayText += phaseFrame >= (framesPerPhase.diffusing - charConvergeFrames[idx] * 0.5) ? getRandomChar() : char;
+                else if (phase === 'converging') {
+                    displayText += phaseFrame >= charConvergeFrames[idx] ? char : getRandomChar();
+                } else {
+                    // Diffusing: reverse the convergence
+                    const diffuseFrame = framesPerPhase.diffusing - charConvergeFrames[idx] * 0.5;
+                    displayText += phaseFrame >= diffuseFrame ? getRandomChar() : char;
+                }
             });
         }
         
@@ -682,11 +774,32 @@ function exportAsGIF() {
     const fontWeight = document.getElementById('fontWeight').value;
     const fontSize = animator.fontSize;
     
+    // Get current animation settings
+    const convergenceDelay = animator.convergenceDelay;
+    const convergencePattern = animator.convergencePattern;
+    const holdDuration = animator.holdDuration;
+    
     const gif = new GIF({ workers: 2, quality: 10, width, height, workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js' });
     
     const fps = 15;
     const frameDelay = 1000 / fps;
-    const framesPerPhase = { converging: Math.ceil(2000 / frameDelay), holding: Math.ceil(animator.holdDuration / frameDelay), diffusing: Math.ceil(1000 / frameDelay) };
+    
+    // Calculate convergence duration based on actual settings
+    const maxTextLength = Math.max(...animator.textLines.map(l => l.length));
+    const convergenceDurationMs = convergencePattern === 'wave' 
+        ? maxTextLength * 100
+        : convergenceDelay * maxTextLength;
+    
+    const diffuseDurationMs = convergenceDelay * maxTextLength * 0.5;
+    
+    const framesPerPhase = { 
+        converging: Math.max(15, Math.ceil(convergenceDurationMs / frameDelay)), 
+        holding: Math.ceil(holdDuration / frameDelay), 
+        diffusing: Math.max(10, Math.ceil(diffuseDurationMs / frameDelay)) 
+    };
+    
+    // Time scaling for GIF (15fps vs 60fps live)
+    const timeScale = 4;
     
     let frameCounter = 0, currentLineIdx = 0, phase = 'converging', phaseFrame = 0;
     let charConvergeFrames = [];
@@ -694,7 +807,13 @@ function exportAsGIF() {
     function initLineConvergence(text) {
         charConvergeFrames = text.split('').map((char, idx) => {
             if (char === ' ') return 0;
-            return animator.convergencePattern === 'wave' ? Math.floor(idx * 3) : Math.floor(Math.random() * framesPerPhase.converging * 0.8);
+            if (convergencePattern === 'wave') {
+                return Math.floor((idx * 100) / frameDelay);
+            } else {
+                const maxDelayMs = convergenceDelay * text.length;
+                const randomDelayMs = Math.random() * maxDelayMs;
+                return Math.floor(randomDelayMs / frameDelay);
+            }
         });
     }
     
@@ -707,15 +826,21 @@ function exportAsGIF() {
         const currentText = animator.textLines[currentLineIdx];
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, width, height);
-        drawGridBackground(ctx, width, height, frameCounter);
+        
+        const scaledTime = frameCounter * timeScale;
+        drawGridBackground(ctx, width, height, scaledTime);
         
         let displayText = '';
         if (phase === 'holding') displayText = currentText;
         else {
             currentText.split('').forEach((char, idx) => {
                 if (char === ' ') displayText += ' ';
-                else if (phase === 'converging') displayText += phaseFrame >= charConvergeFrames[idx] ? char : getRandomChar();
-                else displayText += phaseFrame >= (framesPerPhase.diffusing - charConvergeFrames[idx] * 0.5) ? getRandomChar() : char;
+                else if (phase === 'converging') {
+                    displayText += phaseFrame >= charConvergeFrames[idx] ? char : getRandomChar();
+                } else {
+                    const diffuseFrame = framesPerPhase.diffusing - charConvergeFrames[idx] * 0.5;
+                    displayText += phaseFrame >= diffuseFrame ? getRandomChar() : char;
+                }
             });
         }
         
