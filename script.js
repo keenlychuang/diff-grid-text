@@ -572,29 +572,33 @@ function measureCharPositions(ctx, text, fontSize, fontFamily, fontWeight, width
 
 // Render text with convergence effects to canvas
 function renderTextWithEffects(ctx, text, displayText, charPositions, height, fontSize, fontColor, convergenceColor, convergenceEffect, charConvergeFrames, charConvergedAtFrame, phaseFrame, phase) {
-    const effectDurationFrames = 30; // How long the effect lasts after convergence (about 1 second at 30fps)
+    const effectDurationFrames = 6; // Quick flash - about 0.2 seconds at 30fps
     
     for (let i = 0; i < text.length; i++) {
         const pos = charPositions[i];
         const displayChar = displayText[i];
-        const isConverged = phase === 'holding' || (phase === 'converging' && phaseFrame >= charConvergeFrames[i]);
         const justConverged = phase === 'converging' && 
                               charConvergedAtFrame[i] !== undefined && 
                               (phaseFrame - charConvergedAtFrame[i]) < effectDurationFrames;
         
-        // Calculate effect intensity (fades out over time)
+        // Calculate effect intensity - quick flash then gone
         let effectIntensity = 0;
         if (justConverged && convergenceEffect !== 'none') {
             const framesSinceConverge = phaseFrame - charConvergedAtFrame[i];
-            effectIntensity = 1 - (framesSinceConverge / effectDurationFrames);
-            effectIntensity = Math.max(0, Math.min(1, effectIntensity));
+            // Sharp falloff: full intensity for first 2 frames, then quick drop
+            if (framesSinceConverge < 2) {
+                effectIntensity = 1;
+            } else {
+                effectIntensity = 1 - ((framesSinceConverge - 2) / (effectDurationFrames - 2));
+                effectIntensity = Math.max(0, effectIntensity * effectIntensity); // Quadratic falloff for snappier feel
+            }
         }
         
         // Draw highlight background
         if (effectIntensity > 0 && convergenceEffect === 'highlight') {
-            ctx.globalAlpha = effectIntensity * 0.8;
+            ctx.globalAlpha = effectIntensity;
             ctx.fillStyle = convergenceColor;
-            const padding = fontSize * 0.1;
+            const padding = fontSize * 0.15;
             ctx.fillRect(
                 pos.x - padding,
                 height / 2 - fontSize / 2 - padding,
@@ -619,19 +623,7 @@ function renderTextWithEffects(ctx, text, displayText, charPositions, height, fo
         ctx.fillStyle = fontColor;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        
-        // Slight scale effect on just-converged characters
-        if (effectIntensity > 0.5 && convergenceEffect !== 'none') {
-            const scale = 1 + (effectIntensity - 0.5) * 0.1;
-            ctx.save();
-            ctx.translate(pos.x + pos.width / 2, height / 2);
-            ctx.scale(scale, scale);
-            ctx.translate(-(pos.x + pos.width / 2), -height / 2);
-            ctx.fillText(displayChar, pos.x, height / 2);
-            ctx.restore();
-        } else {
-            ctx.fillText(displayChar, pos.x, height / 2);
-        }
+        ctx.fillText(displayChar, pos.x, height / 2);
     }
 }
 
