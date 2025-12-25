@@ -547,6 +547,139 @@ function getSupportedWebMType() {
     return null;
 }
 
+// Helper to measure text for per-character rendering
+function measureCharPositions(ctx, text, fontSize, fontFamily, fontWeight, width) {
+    ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+    const metrics = ctx.measureText(text);
+    const totalWidth = metrics.width;
+    const startX = (width - totalWidth) / 2;
+    
+    const positions = [];
+    let currentX = startX;
+    
+    for (let i = 0; i < text.length; i++) {
+        const charWidth = ctx.measureText(text[i]).width;
+        positions.push({
+            x: currentX,
+            width: charWidth,
+            char: text[i]
+        });
+        currentX += charWidth;
+    }
+    
+    return positions;
+}
+
+// Render text with convergence effects to canvas
+function renderTextWithEffects(ctx, text, displayText, charPositions, height, fontSize, fontColor, convergenceColor, convergenceEffect, charConvergeFrames, charConvergedAtFrame, phaseFrame, phase) {
+    const effectDurationFrames = 30; // How long the effect lasts after convergence (about 1 second at 30fps)
+    
+    for (let i = 0; i < text.length; i++) {
+        const pos = charPositions[i];
+        const displayChar = displayText[i];
+        const isConverged = phase === 'holding' || (phase === 'converging' && phaseFrame >= charConvergeFrames[i]);
+        const justConverged = phase === 'converging' && 
+                              charConvergedAtFrame[i] !== undefined && 
+                              (phaseFrame - charConvergedAtFrame[i]) < effectDurationFrames;
+        
+        // Calculate effect intensity (fades out over time)
+        let effectIntensity = 0;
+        if (justConverged && convergenceEffect !== 'none') {
+            const framesSinceConverge = phaseFrame - charConvergedAtFrame[i];
+            effectIntensity = 1 - (framesSinceConverge / effectDurationFrames);
+            effectIntensity = Math.max(0, Math.min(1, effectIntensity));
+        }
+        
+        // Draw highlight background
+        if (effectIntensity > 0 && convergenceEffect === 'highlight') {
+            ctx.globalAlpha = effectIntensity * 0.8;
+            ctx.fillStyle = convergenceColor;
+            const padding = fontSize * 0.1;
+            ctx.fillRect(
+                pos.x - padding,
+                height / 2 - fontSize / 2 - padding,
+                pos.width + padding * 2,
+                fontSize + padding * 2
+            );
+        }
+        
+        // Draw underline
+        if (effectIntensity > 0 && convergenceEffect === 'underline') {
+            ctx.globalAlpha = effectIntensity;
+            ctx.strokeStyle = convergenceColor;
+            ctx.lineWidth = 2 + effectIntensity;
+            ctx.beginPath();
+            ctx.moveTo(pos.x, height / 2 + fontSize / 2 + 2);
+            ctx.lineTo(pos.x + pos.width, height / 2 + fontSize / 2 + 2);
+            ctx.stroke();
+        }
+        
+        // Draw character
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = fontColor;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        
+        // Slight scale effect on just-converged characters
+        if (effectIntensity > 0.5 && convergenceEffect !== 'none') {
+            const scale = 1 + (effectIntensity - 0.5) * 0.1;
+            ctx.save();
+            ctx.translate(pos.x + pos.width / 2, height / 2);
+            ctx.scale(scale, scale);
+            ctx.translate(-(pos.x + pos.width / 2), -height / 2);
+            ctx.fillText(displayChar, pos.x, height / 2);
+            ctx.restore();
+        } else {
+            ctx.fillText(displayChar, pos.x, height / 2);
+        }
+    }
+}
+
+// Particle system for export
+class ExportParticleSystem {
+    constructor() {
+        this.particles = [];
+    }
+    
+    createParticles(x, y, color) {
+        const particleCount = 8 + Math.floor(Math.random() * 5);
+        for (let i = 0; i < particleCount; i++) {
+            this.particles.push({
+                x: x + (Math.random() - 0.5) * 20,
+                y: y + (Math.random() - 0.5) * 20,
+                vx: (Math.random() - 0.5) * 4,
+                vy: (Math.random() - 0.5) * 4,
+                life: 1.0,
+                decay: 0.02 + Math.random() * 0.01,
+                size: 2 + Math.random() * 3,
+                color: color
+            });
+        }
+    }
+    
+    update() {
+        this.particles = this.particles.filter(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.1; // gravity
+            p.life -= p.decay;
+            return p.life > 0;
+        });
+    }
+    
+    render(ctx) {
+        for (const p of this.particles) {
+            ctx.save();
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+}
+
 // WebM Export - Uses native MediaRecorder for fast hardware-accelerated encoding
 function exportAsWebM() {
     if (exportInProgress) return;
@@ -581,9 +714,11 @@ function exportAsWebM() {
     // Get styles
     const bgColor = document.getElementById('bgColor').value;
     const fontColor = document.getElementById('fontColor').value;
+    const convergenceColor = document.getElementById('convergenceColor').value;
     const fontFamily = document.getElementById('fontSelect').value.replace(/'/g, '');
     const fontWeight = document.getElementById('fontWeight').value;
     const fontSize = animator.fontSize;
+    const convergenceEffect = document.getElementById('convergenceEffect').value;
     
     // Get current animation settings
     const convergenceDelay = animator.convergenceDelay;
@@ -640,12 +775,10 @@ function exportAsWebM() {
     const frameDelay = 1000 / fps;
     
     // Calculate convergence duration based on actual settings
-    // In live preview: delay = random * convergenceDelay * textLength (ms)
-    // So max convergence time is approximately convergenceDelay * textLength
     const maxTextLength = Math.max(...animator.textLines.map(l => l.length));
     const convergenceDurationMs = convergencePattern === 'wave' 
-        ? maxTextLength * 100  // wave pattern: index * 100ms
-        : convergenceDelay * maxTextLength;  // random pattern
+        ? maxTextLength * 100
+        : convergenceDelay * maxTextLength;
     
     const diffuseDurationMs = convergenceDelay * maxTextLength * 0.5;
     
@@ -655,29 +788,36 @@ function exportAsWebM() {
         diffusing: Math.max(20, Math.ceil(diffuseDurationMs / frameDelay))
     };
     
-    // Time scaling factor: live preview runs at ~60fps, export at 30fps
-    // We need to scale the time value to match the visual speed
-    const timeScale = 2; // 60fps / 30fps = 2
+    // Time scaling factor
+    const timeScale = 2;
     
     let frameCounter = 0;
     let currentLineIdx = 0;
     let phase = 'converging';
     let phaseFrame = 0;
     let charConvergeFrames = [];
+    let charConvergedAtFrame = []; // Track when each char actually converged
+    let charPositions = [];
+    
+    // Particle system for export
+    const particleSystem = new ExportParticleSystem();
     
     function initLineConvergence(text) {
         charConvergeFrames = text.split('').map((char, idx) => {
             if (char === ' ') return 0;
             if (convergencePattern === 'wave') {
-                // Wave: index * 100ms converted to frames
                 return Math.floor((idx * 100) / frameDelay);
             } else {
-                // Random: use actual convergenceDelay setting
                 const maxDelayMs = convergenceDelay * text.length;
                 const randomDelayMs = Math.random() * maxDelayMs;
                 return Math.floor(randomDelayMs / frameDelay);
             }
         });
+        charConvergedAtFrame = new Array(text.length).fill(undefined);
+        
+        // Pre-calculate character positions
+        ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+        charPositions = measureCharPositions(ctx, text, fontSize, fontFamily, fontWeight, width);
     }
     
     function getRandomChar() {
@@ -690,31 +830,67 @@ function exportAsWebM() {
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, width, height);
         
-        // Scale time to match live preview speed
         const scaledTime = frameCounter * timeScale;
         drawGridBackground(ctx, width, height, scaledTime);
         
+        // Build display text and track convergence
         let displayText = '';
-        if (phase === 'holding') displayText = currentText;
-        else {
+        if (phase === 'holding') {
+            displayText = currentText;
+        } else {
             currentText.split('').forEach((char, idx) => {
-                if (char === ' ') displayText += ' ';
-                else if (phase === 'converging') {
-                    displayText += phaseFrame >= charConvergeFrames[idx] ? char : getRandomChar();
+                if (char === ' ') {
+                    displayText += ' ';
+                } else if (phase === 'converging') {
+                    const isConverged = phaseFrame >= charConvergeFrames[idx];
+                    if (isConverged) {
+                        // Track when this char converged
+                        if (charConvergedAtFrame[idx] === undefined) {
+                            charConvergedAtFrame[idx] = phaseFrame;
+                            // Create particles if using particle effect
+                            if (convergenceEffect === 'particles' && charPositions[idx]) {
+                                particleSystem.createParticles(
+                                    charPositions[idx].x + charPositions[idx].width / 2,
+                                    height / 2,
+                                    convergenceColor
+                                );
+                            }
+                        }
+                        displayText += char;
+                    } else {
+                        displayText += getRandomChar();
+                    }
                 } else {
-                    // Diffusing: reverse the convergence
+                    // Diffusing
                     const diffuseFrame = framesPerPhase.diffusing - charConvergeFrames[idx] * 0.5;
                     displayText += phaseFrame >= diffuseFrame ? getRandomChar() : char;
                 }
             });
         }
         
-        ctx.fillStyle = fontColor;
+        // Update and render particles
+        particleSystem.update();
+        particleSystem.render(ctx);
+        
+        // Render text with effects
         ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.globalAlpha = 1;
-        ctx.fillText(displayText, width / 2, height / 2);
+        
+        if (convergenceEffect === 'none' || convergenceEffect === 'particles') {
+            // Simple text rendering for no effect or particles (particles are separate)
+            ctx.fillStyle = fontColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.globalAlpha = 1;
+            ctx.fillText(displayText, width / 2, height / 2);
+        } else {
+            // Render with highlight/underline effects
+            renderTextWithEffects(
+                ctx, currentText, displayText, charPositions,
+                height, fontSize, fontColor, convergenceColor,
+                convergenceEffect, charConvergeFrames, charConvergedAtFrame,
+                phaseFrame, phase
+            );
+        }
     }
     
     mediaRecorder.start();
@@ -737,8 +913,14 @@ function exportAsWebM() {
         const progress = Math.floor((capturedFrames / totalFrames) * 100);
         updateExportProgress(currentLineIdx + 1, totalLines, progress, 'Recording...');
         
-        if (phase === 'converging' && phaseFrame >= framesPerPhase.converging) { phase = 'holding'; phaseFrame = 0; }
-        else if (phase === 'holding' && phaseFrame >= framesPerPhase.holding) { phase = 'diffusing'; phaseFrame = 0; }
+        if (phase === 'converging' && phaseFrame >= framesPerPhase.converging) { 
+            phase = 'holding'; 
+            phaseFrame = 0; 
+        }
+        else if (phase === 'holding' && phaseFrame >= framesPerPhase.holding) { 
+            phase = 'diffusing'; 
+            phaseFrame = 0; 
+        }
         else if (phase === 'diffusing' && phaseFrame >= framesPerPhase.diffusing) {
             currentLineIdx++;
             phase = 'converging';
@@ -770,9 +952,11 @@ function exportAsGIF() {
     
     const bgColor = document.getElementById('bgColor').value;
     const fontColor = document.getElementById('fontColor').value;
+    const convergenceColor = document.getElementById('convergenceColor').value;
     const fontFamily = document.getElementById('fontSelect').value.replace(/'/g, '');
     const fontWeight = document.getElementById('fontWeight').value;
     const fontSize = animator.fontSize;
+    const convergenceEffect = document.getElementById('convergenceEffect').value;
     
     // Get current animation settings
     const convergenceDelay = animator.convergenceDelay;
@@ -803,6 +987,11 @@ function exportAsGIF() {
     
     let frameCounter = 0, currentLineIdx = 0, phase = 'converging', phaseFrame = 0;
     let charConvergeFrames = [];
+    let charConvergedAtFrame = [];
+    let charPositions = [];
+    
+    // Particle system for export
+    const particleSystem = new ExportParticleSystem();
     
     function initLineConvergence(text) {
         charConvergeFrames = text.split('').map((char, idx) => {
@@ -815,6 +1004,11 @@ function exportAsGIF() {
                 return Math.floor(randomDelayMs / frameDelay);
             }
         });
+        charConvergedAtFrame = new Array(text.length).fill(undefined);
+        
+        // Pre-calculate character positions
+        ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+        charPositions = measureCharPositions(ctx, text, fontSize, fontFamily, fontWeight, width);
     }
     
     function getRandomChar() {
@@ -830,13 +1024,31 @@ function exportAsGIF() {
         const scaledTime = frameCounter * timeScale;
         drawGridBackground(ctx, width, height, scaledTime);
         
+        // Build display text and track convergence
         let displayText = '';
-        if (phase === 'holding') displayText = currentText;
-        else {
+        if (phase === 'holding') {
+            displayText = currentText;
+        } else {
             currentText.split('').forEach((char, idx) => {
-                if (char === ' ') displayText += ' ';
-                else if (phase === 'converging') {
-                    displayText += phaseFrame >= charConvergeFrames[idx] ? char : getRandomChar();
+                if (char === ' ') {
+                    displayText += ' ';
+                } else if (phase === 'converging') {
+                    const isConverged = phaseFrame >= charConvergeFrames[idx];
+                    if (isConverged) {
+                        if (charConvergedAtFrame[idx] === undefined) {
+                            charConvergedAtFrame[idx] = phaseFrame;
+                            if (convergenceEffect === 'particles' && charPositions[idx]) {
+                                particleSystem.createParticles(
+                                    charPositions[idx].x + charPositions[idx].width / 2,
+                                    height / 2,
+                                    convergenceColor
+                                );
+                            }
+                        }
+                        displayText += char;
+                    } else {
+                        displayText += getRandomChar();
+                    }
                 } else {
                     const diffuseFrame = framesPerPhase.diffusing - charConvergeFrames[idx] * 0.5;
                     displayText += phaseFrame >= diffuseFrame ? getRandomChar() : char;
@@ -844,12 +1056,27 @@ function exportAsGIF() {
             });
         }
         
-        ctx.fillStyle = fontColor;
+        // Update and render particles
+        particleSystem.update();
+        particleSystem.render(ctx);
+        
+        // Render text with effects
         ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.globalAlpha = 1;
-        ctx.fillText(displayText, width / 2, height / 2);
+        
+        if (convergenceEffect === 'none' || convergenceEffect === 'particles') {
+            ctx.fillStyle = fontColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.globalAlpha = 1;
+            ctx.fillText(displayText, width / 2, height / 2);
+        } else {
+            renderTextWithEffects(
+                ctx, currentText, displayText, charPositions,
+                height, fontSize, fontColor, convergenceColor,
+                convergenceEffect, charConvergeFrames, charConvergedAtFrame,
+                phaseFrame, phase
+            );
+        }
     }
     
     initLineConvergence(animator.textLines[0]);
